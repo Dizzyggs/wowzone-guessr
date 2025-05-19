@@ -18,7 +18,6 @@ import { preloadImages, getZoneImagePath } from '../utils/imagePreloader'
 import GameNotification from '../components/GameNotification'
 import ScoreCounter from '../components/ScoreCounter'
 import GameTimer from '../components/GameTimer'
-import { FaSearch } from 'react-icons/fa'
 import ResultsModal from '../components/ResultsModal'
 import ReadyModal from '../components/ReadyModal'
 import { calculateTimeBonus } from '../utils/scoring'
@@ -364,7 +363,7 @@ const Game = () => {
           >
             {gameState.options.map((option, index) => (
               <MotionButton
-                key={option.id}
+                key={option.id ? option.id : index}
                 size="lg"
                 height={{ base: "60px", sm: "70px" }}
                 fontSize={{ base: "md", sm: "xl" }}

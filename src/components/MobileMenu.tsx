@@ -5,7 +5,6 @@ import {
   MenuList,
   MenuItem,
   Icon,
-  useColorModeValue,
 } from '@chakra-ui/react'
 import { FaBars, FaGamepad, FaTrophy } from 'react-icons/fa'
 import { Link as RouterLink } from 'react-router-dom'
