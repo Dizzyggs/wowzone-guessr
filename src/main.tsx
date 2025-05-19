@@ -6,6 +6,12 @@ import App from './App'
 import theme from './theme'
 import './index.css'
 
+// Handle Vite preload errors
+window.addEventListener('vite:preloadError', (event) => {
+  // Reload the page when a preload error occurs
+  window.location.reload()
+})
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ChakraProvider theme={theme}>
