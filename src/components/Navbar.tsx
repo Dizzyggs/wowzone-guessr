@@ -1,6 +1,7 @@
 import { Box, Flex, Heading, Button, Container, Icon } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
 import { FaGamepad, FaTrophy, FaDragon } from 'react-icons/fa'
+import MobileMenu from './MobileMenu'
 
 const Navbar = () => {
   return (
@@ -18,7 +19,7 @@ const Navbar = () => {
           <Heading
             as={RouterLink}
             to="/"
-            fontSize="2xl"
+            fontSize={{ base: "xl", md: "2xl" }}
             fontWeight="bold"
             letterSpacing="tight"
             color="white"
@@ -31,11 +32,12 @@ const Navbar = () => {
             alignItems="center"
             gap={2}
           >
-            <Icon as={FaDragon} w={8} h={8} color="blue.400" />
+            <Icon as={FaDragon} w={{ base: 6, md: 8 }} h={{ base: 6, md: 8 }} color="blue.400" />
             WoW ZoneGuesser
           </Heading>
           
-          <Flex gap={4}>
+          {/* Desktop Navigation */}
+          <Flex gap={4} display={{ base: 'none', md: 'flex' }}>
             <Button
               as={RouterLink}
               to="/play"
@@ -65,6 +67,11 @@ const Navbar = () => {
               Leaderboard
             </Button>
           </Flex>
+
+          {/* Mobile Menu */}
+          <Box display={{ base: 'block', md: 'none' }}>
+            <MobileMenu />
+          </Box>
         </Flex>
       </Container>
     </Box>

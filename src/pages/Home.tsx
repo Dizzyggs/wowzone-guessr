@@ -9,42 +9,44 @@ const Home = () => {
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   return (
-    <Container maxW="container.xl" py={20}>
+    <Container maxW="container.xl" py={{ base: 6, md: 20 }}>
       <Flex 
         direction={{ base: 'column', lg: 'row' }}
         align="center"
         justify="space-between"
-        gap={10}
+        gap={{ base: 6, lg: 10 }}
       >
         <VStack 
-          align="flex-start" 
-          spacing={6}
+          align={{ base: "center", lg: "flex-start" }}
+          spacing={{ base: 4, lg: 6 }}
           flex={1}
+          textAlign={{ base: "center", lg: "left" }}
         >
           <Heading
             as="h1"
-            size="2xl"
+            size={{ base: "xl", md: "2xl" }}
             bgGradient="linear(to-r, blue.400, purple.500)"
             bgClip="text"
             fontWeight="extrabold"
             display="flex"
             alignItems="center"
             gap={4}
+            flexDir={{ base: "column", sm: "row" }}
           >
-            <Icon as={FaMapMarkedAlt} w={12} h={12} color="blue.400" />
+            <Icon as={FaMapMarkedAlt} w={{ base: 8, md: 12 }} h={{ base: 8, md: 12 }} color="blue.400" />
             Test Your World of Warcraft Knowledge
           </Heading>
           
-          <VStack align="stretch" spacing={4} width="full">
-            <HStack spacing={4} color="gray.300">
+          <VStack align={{ base: "center", lg: "stretch" }} spacing={4} width="full">
+            <HStack spacing={4} color="gray.300" justify={{ base: "center", lg: "flex-start" }}>
               <Icon as={FaCompass} w={6} h={6} color="blue.400" />
-              <Text fontSize="xl">
+              <Text fontSize={{ base: "lg", xl: "xl" }}>
                 Challenge yourself to identify locations within WoW Vanilla and TBC.
               </Text>
             </HStack>
-            <HStack spacing={4} color="gray.300">
+            <HStack spacing={4} color="gray.300" justify={{ base: "center", lg: "flex-start" }}>
               <Icon as={FaTrophy} w={6} h={6} color="purple.500" />
-              <Text fontSize="xl">
+              <Text fontSize={{ base: "lg", xl: "xl" }}>
                 Compete with others and climb the leaderboard rankings.
               </Text>
             </HStack>
@@ -52,7 +54,7 @@ const Home = () => {
           
           <HStack spacing={4}>
             <Button
-              size="lg"
+              size={{ base: "md", md: "lg" }}
               colorScheme="blue"
               onClick={() => navigate('/play')}
               _hover={{
@@ -65,7 +67,7 @@ const Home = () => {
               Start Playing
             </Button>
             <Button
-              size="lg"
+              size={{ base: "md", md: "lg" }}
               variant="outline"
               colorScheme="purple"
               onClick={onOpen}
@@ -81,7 +83,7 @@ const Home = () => {
           </HStack>
         </VStack>
 
-        <Box flex={1}>
+        <Box flex={1} w="full">
           <HeroSlideshow />
         </Box>
       </Flex>

@@ -71,8 +71,8 @@ const Leaderboard = () => {
   }
 
   return (
-    <Container maxW="container.xl" py={16}>
-      <VStack spacing={8}>
+    <Container maxW="container.xl" py={{ base: 8, md: 16 }}>
+      <VStack spacing={{ base: 4, md: 8 }}>
         <MotionBox
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -80,27 +80,27 @@ const Leaderboard = () => {
           textAlign="center"
         >
           <Heading
-            fontSize="5xl"
+            fontSize={{ base: "3xl", md: "5xl" }}
             bgGradient="linear(to-r, blue.400, purple.500)"
             bgClip="text"
             fontWeight="extrabold"
-            mb={4}
+            mb={{ base: 2, md: 4 }}
             display="flex"
             alignItems="center"
             justifyContent="center"
-            gap={4}
+            gap={{ base: 2, md: 4 }}
           >
-            <Icon as={FaTrophy} w={12} h={12} color="blue.400" />
+            <Icon as={FaTrophy} w={{ base: 8, md: 12 }} h={{ base: 8, md: 12 }} color="blue.400" />
             Leaderboard
           </Heading>
-          <Text fontSize="xl" color="gray.400">
+          <Text fontSize={{ base: "lg", md: "xl" }} color="gray.400">
             Top players and their achievements
           </Text>
         </MotionBox>
 
-        <HStack spacing={4} justify="center">
+        <HStack spacing={{ base: 2, md: 4 }} justify="center">
           <Button
-            size="lg"
+            size={{ base: "md", md: "lg" }}
             variant={selectedMode === 'easy' ? 'solid' : 'outline'}
             colorScheme="blue"
             leftIcon={<Icon as={FaGamepad} />}
@@ -109,7 +109,7 @@ const Leaderboard = () => {
             Multiple Choice
           </Button>
           <Button
-            size="lg"
+            size={{ base: "md", md: "lg" }}
             variant={selectedMode === 'hard' ? 'solid' : 'outline'}
             colorScheme="purple"
             leftIcon={<Icon as={FaGamepad} />}
@@ -123,36 +123,36 @@ const Leaderboard = () => {
           w="full"
           bg="rgba(10, 15, 28, 0.95)"
           borderRadius="xl"
-          p={6}
+          p={{ base: 2, md: 6 }}
           border="2px solid"
           borderColor={selectedMode === 'easy' ? 'blue.400' : 'purple.500'}
           boxShadow="xl"
-          overflow="hidden"
+          overflow={{ base: "auto", md: "hidden" }}
         >
           {error ? (
             <Text color="red.400" textAlign="center" fontSize="lg">
               {error}
             </Text>
           ) : (
-            <Table variant="unstyled">
+            <Table variant="unstyled" size={{ base: "sm", md: "md" }}>
               <Thead>
                 <Tr>
-                  <Th color="gray.400" textAlign="center">Rank</Th>
-                  <Th color="gray.400">Player</Th>
-                  <Th color="gray.400" isNumeric>Score</Th>
-                  <Th color="gray.400" isNumeric>Questions</Th>
-                  <Th color="gray.400" isNumeric textAlign="right">Time</Th>
+                  <Th color="gray.400" textAlign="center" px={{ base: 2, md: 6 }}>Rank</Th>
+                  <Th color="gray.400" px={{ base: 2, md: 6 }}>Player</Th>
+                  <Th color="gray.400" isNumeric px={{ base: 2, md: 6 }}>Score</Th>
+                  <Th color="gray.400" isNumeric display={{ base: "none", md: "table-cell" }}>Questions</Th>
+                  <Th color="gray.400" isNumeric textAlign="right" display={{ base: "none", md: "table-cell" }}>Time</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <Tr key={i}>
-                      <Td><Skeleton height="20px" /></Td>
-                      <Td><Skeleton height="20px" /></Td>
-                      <Td><Skeleton height="20px" /></Td>
-                      <Td><Skeleton height="20px" /></Td>
-                      <Td><Skeleton height="20px" /></Td>
+                      <Td px={{ base: 2, md: 6 }}><Skeleton height="20px" /></Td>
+                      <Td px={{ base: 2, md: 6 }}><Skeleton height="20px" /></Td>
+                      <Td px={{ base: 2, md: 6 }}><Skeleton height="20px" /></Td>
+                      <Td display={{ base: "none", md: "table-cell" }}><Skeleton height="20px" /></Td>
+                      <Td display={{ base: "none", md: "table-cell" }}><Skeleton height="20px" /></Td>
                     </Tr>
                   ))
                 ) : scores.length === 0 ? (
@@ -171,35 +171,35 @@ const Leaderboard = () => {
                       bg={index % 2 === 0 ? 'rgba(66, 153, 225, 0.1)' : 'transparent'}
                       _hover={{ bg: 'rgba(66, 153, 225, 0.2)' }}
                     >
-                      <Td textAlign="center" position="relative">
+                      <Td textAlign="center" position="relative" px={{ base: 2, md: 6 }}>
                         {index <= 2 ? (
                           <Icon
                             as={FaMedal}
-                            w={6}
-                            h={6}
+                            w={{ base: 5, md: 6 }}
+                            h={{ base: 5, md: 6 }}
                             color={getMedalColor(index)}
                           />
                         ) : (
                           <Text color="gray.400">{index + 1}</Text>
                         )}
                       </Td>
-                      <Td>
-                        <Text color="white" fontWeight="bold">
+                      <Td px={{ base: 2, md: 6 }}>
+                        <Text color="white" fontWeight="bold" fontSize={{ base: "sm", md: "md" }}>
                           {entry.playerName}
                         </Text>
                       </Td>
-                      <Td isNumeric>
-                        <Text color="yellow.400" fontWeight="bold">
+                      <Td isNumeric px={{ base: 2, md: 6 }}>
+                        <Text color="yellow.400" fontWeight="bold" fontSize={{ base: "sm", md: "md" }}>
                           {entry.score}
                         </Text>
                       </Td>
-                      <Td isNumeric>
+                      <Td isNumeric display={{ base: "none", md: "table-cell" }}>
                         <Text color="green.400">
                           {entry.questionsAnswered}
                         </Text>
                       </Td>
-                      <Td isNumeric>
-                        <Text color="purple.400" textAlign="right">
+                      <Td isNumeric textAlign="right" display={{ base: "none", md: "table-cell" }}>
+                        <Text color="blue.400">
                           {formatTime(entry.timeElapsed)}
                         </Text>
                       </Td>

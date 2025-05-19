@@ -77,7 +77,7 @@ const HeroSlideshow = () => {
         borderRadius: 'xl',
         zIndex: -1,
       }}
-      h="400px"
+      h={{ base: "250px", sm: "300px", md: "400px" }}
       overflow="hidden"
       borderRadius="xl"
     >
@@ -120,8 +120,10 @@ const HeroSlideshow = () => {
             src={slides[currentSlide]}
             alt={`World of Warcraft Landscape ${currentSlide + 1}`}
             objectFit="cover"
+            objectPosition="center"
             w="full"
             h="full"
+            loading="eager"
           />
         </MotionBox>
       </AnimatePresence>

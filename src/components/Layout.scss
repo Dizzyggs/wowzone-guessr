@@ -1,3 +1,9 @@
 .Layout-Container {
   overflow: hidden;
 }
+
+.Layout-Container {
+  @media (max-width: 768px) {
+    overflow-y: scroll !important;
+  }
+}
