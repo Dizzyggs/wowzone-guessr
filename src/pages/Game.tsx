@@ -118,23 +118,17 @@ const Game = () => {
     const randomZone = unusedZones[Math.floor(Math.random() * unusedZones.length)]
     const options = isMultipleChoice ? getRandomOptions(randomZone) : []
 
+    // Create the image path using the public folder
+    const imagePath = `/zone_images/${randomZone.continent}/${randomZone.imageFile}`
+
     setGameState(prev => ({
       ...prev,
       currentZone: randomZone,
+      currentImage: imagePath,
       options,
       usedZones: new Set([...prev.usedZones, randomZone.id]),
       imageKey: prev.imageKey + 1
     }))
-
-    import(`/zone_images/${randomZone.continent}/${randomZone.imageFile}`).then(
-      (image: { default: string }) => {
-        setGameState(prev => ({ ...prev, currentImage: image.default }))
-      }
-    ).catch(error => {
-      console.error('Failed to load zone image:', error)
-      showGameNotification("Failed to load zone image", 'error')
-      setTimeout(() => navigate('/play'), 2000)
-    })
   }
 
   const showGameNotification = (text: string, type: 'success' | 'error') => {
