@@ -2,7 +2,7 @@ import { Box, Container, Flex } from '@chakra-ui/react'
 import { Outlet } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import Navbar from '../components/Navbar'
-import overlayImage from '../assets/overlay.jpg'
+import overlayImage from '/overlay.jpg'
 import './Layout.scss'
 
 interface LayoutProps {

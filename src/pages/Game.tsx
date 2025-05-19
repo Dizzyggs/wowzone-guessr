@@ -126,7 +126,7 @@ const Game = () => {
       imageKey: prev.imageKey + 1
     }))
 
-    import(`../assets/zone_images/${randomZone.continent}/${randomZone.imageFile}`).then(
+    import(`/zone_images/${randomZone.continent}/${randomZone.imageFile}`).then(
       (image: { default: string }) => {
         setGameState(prev => ({ ...prev, currentImage: image.default }))
       }

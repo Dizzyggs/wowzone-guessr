@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 const MotionBox = motion(Box)
 
 const slides = [
-  '/src/assets/slide_imgs/slide_img1.png',
-  '/src/assets/slide_imgs/slide_img2.jpg',
-  '/src/assets/slide_imgs/slide_img3.jpg',
-  '/src/assets/slide_imgs/slide_img4.jpg',
-  '/src/assets/slide_imgs/slide_img5.jpg',
+  'slide_imgs/slide_img1.png',
+  'slide_imgs/slide_img2.jpg',
+  'slide_imgs/slide_img3.jpg',
+  'slide_imgs/slide_img4.jpg',
+  'slide_imgs/slide_img5.jpg',
 ]
 
 const slideVariants = {
