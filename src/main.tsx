@@ -8,6 +8,9 @@ import './index.css'
 
 // Handle Vite preload errors
 window.addEventListener('vite:preloadError', (event) => {
+  if(event) {
+    // console.log(event)
+  }
   // Reload the page when a preload error occurs
   window.location.reload()
 })
