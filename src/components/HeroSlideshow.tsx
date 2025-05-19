@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Box, Image } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { preloadImagePaths } from '../utils/imagePreloader'
 
 const MotionBox = motion(Box)
 
@@ -42,6 +43,9 @@ const HeroSlideshow = () => {
   const [direction, setDirection] = useState(1)
 
   useEffect(() => {
+    // Preload all slides when component mounts
+    preloadImagePaths(slides)
+
     const timer = setInterval(() => {
       const nextSlide = (currentSlide + 1) % slides.length
       setDirection(1)

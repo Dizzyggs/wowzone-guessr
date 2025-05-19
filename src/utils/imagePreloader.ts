@@ -16,6 +16,17 @@ export const preloadImages = (zones: Zone[], batchSize: number = 3) => {
 };
 
 /**
+ * Preloads an array of image paths
+ * @param imagePaths Array of image paths to preload
+ */
+export const preloadImagePaths = (imagePaths: string[]) => {
+  imagePaths.forEach(path => {
+    const img = new Image();
+    img.src = path;
+  });
+};
+
+/**
  * Creates the full image path for a zone
  * @param zone Zone object
  * @returns Full image path
