@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getZonesByContinent, getZoneNames, type Zone } from '../data/zones'
+import { preloadImages, getZoneImagePath } from '../utils/imagePreloader'
 import GameNotification from '../components/GameNotification'
 import ScoreCounter from '../components/ScoreCounter'
 import GameTimer from '../components/GameTimer'
@@ -117,9 +118,9 @@ const Game = () => {
 
     const randomZone = unusedZones[Math.floor(Math.random() * unusedZones.length)]
     const options = isMultipleChoice ? getRandomOptions(randomZone) : []
-
-    // Create the image path using the public folder
-    const imagePath = `/zone_images/${randomZone.continent}/${randomZone.imageFile}`
+    
+    // Get the image path
+    const imagePath = getZoneImagePath(randomZone)
 
     setGameState(prev => ({
       ...prev,
@@ -129,6 +130,10 @@ const Game = () => {
       usedZones: new Set([...prev.usedZones, randomZone.id]),
       imageKey: prev.imageKey + 1
     }))
+
+    // Preload next batch of images
+    const remainingZones = unusedZones.filter(zone => zone.id !== randomZone.id)
+    preloadImages(remainingZones)
   }
 
   const showGameNotification = (text: string, type: 'success' | 'error') => {
