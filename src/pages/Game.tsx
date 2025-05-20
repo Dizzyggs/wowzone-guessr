@@ -20,7 +20,6 @@ import ScoreCounter from '../components/ScoreCounter'
 import GameTimer from '../components/GameTimer'
 import ResultsModal from '../components/ResultsModal'
 import ReadyModal from '../components/ReadyModal'
-import { calculateTimeBonus } from '../utils/scoring'
 import './Game.scss'
 
 const MotionBox = motion(Box)
