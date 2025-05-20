@@ -26,6 +26,7 @@ import './Game.scss'
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 const MotionImage = motion(Image)
+const MotionSuggestionBox = motion(Box)
 
 interface GameState {
   score: number
@@ -403,12 +404,12 @@ const Game = () => {
               <Input
                 placeholder="Type the zone name..."
                 size="lg"
-                height={{ base: "50px", sm: "60px" }}
-                fontSize={{ base: "lg", sm: "xl" }}
+                height={{ base: "45px", sm: "50px" }}
+                fontSize={{ base: "md", sm: "lg" }}
                 textAlign="center"
                 bg="rgba(10, 15, 28, 0.95)"
-                border="2px solid"
-                borderRadius="xl"
+                border="1px solid"
+                borderRadius="2xl"
                 borderColor={
                   gameState.isAnswering 
                     ? (gameState.lives > 1 ? "orange.400" : "red.400")
@@ -423,11 +424,37 @@ const Game = () => {
                   }
                 }}
                 isDisabled={gameState.inputDisabled}
+                color="white"
+                _placeholder={{ color: "whiteAlpha.500" }}
+                sx={{
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: '0 4px 12px rgba(159, 122, 234, 0.15)',
+                  transition: 'all 0.2s ease',
+                  '&:focus': {
+                    borderColor: 'purple.400',
+                    boxShadow: '0 4px 16px rgba(159, 122, 234, 0.25)',
+                    transform: 'translateY(-1px)',
+                  },
+                  '&:hover:not(:disabled)': {
+                    borderColor: 'purple.400',
+                    boxShadow: '0 4px 16px rgba(159, 122, 234, 0.2)',
+                    transform: 'translateY(-1px)',
+                  },
+                  '&:disabled': {
+                    opacity: 0.7,
+                    cursor: 'not-allowed',
+                    _hover: {
+                      borderColor: gameState.lives > 1 ? "orange.400" : "red.400"
+                    }
+                  }
+                }}
+                spellCheck="false"
+                autoComplete="off"
               />
 
               {/* Suggestions Box */}
               {suggestions.length > 0 && !gameState.inputDisabled && (
-                <Box
+                <MotionBox
                   position="absolute"
                   top="100%"
                   left={0}
@@ -435,26 +462,55 @@ const Game = () => {
                   mt={2}
                   bg="rgba(10, 15, 28, 0.95)"
                   borderRadius="xl"
-                  border="2px solid"
+                  border="1px solid"
                   borderColor="purple.500"
                   zIndex={10}
-                  maxH={{ base: "200px", sm: "300px" }}
+                  maxH={{ base: "180px", sm: "220px" }}
                   overflowY="auto"
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  transition={{
+                    duration: 0.2,
+                    ease: [0.19, 1.0, 0.22, 1.0]
+                  }}
+                  sx={{
+                    '&::-webkit-scrollbar': {
+                      display: 'none',
+                    },
+                    '-ms-overflow-style': 'none',
+                    'scrollbarWidth': 'none',
+                    backdropFilter: 'blur(12px)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  }}
                 >
                   {suggestions.map((suggestion, index) => (
-                    <Box
+                    <MotionBox
                       key={index}
-                      px={4}
-                      py={2}
+                      px={3}
+                      py={1.5}
                       cursor="pointer"
-                      _hover={{ bg: "whiteAlpha.200" }}
+                      _hover={{ bg: "whiteAlpha.100" }}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      fontSize={{ base: "md", sm: "lg" }}
+                      fontSize={{ base: "sm", sm: "md" }}
+                      color="white"
+                      initial={{ opacity: 0, scale: 0.7, x: -20 }}
+                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                      transition={{
+                        duration: 0.3,
+                        delay: index * 0.05,
+                        ease: [0.34, 1.56, 0.64, 1],
+                      }}
+                      whileHover={{
+                        x: 5,
+                        transition: { duration: 0.1 }
+                      }}
+                      whileTap={{ scale: 0.98 }}
                     >
                       {suggestion}
-                    </Box>
+                    </MotionBox>
                   ))}
-                </Box>
+                </MotionBox>
               )}
             </MotionBox>
           </Box>
