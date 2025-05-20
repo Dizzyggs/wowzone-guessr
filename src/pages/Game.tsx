@@ -43,6 +43,7 @@ interface GameState {
   gameTime: number
   showResults: boolean
   isReady: boolean
+  questionsAnswered: number
 }
 
 const Game = () => {
@@ -66,7 +67,8 @@ const Game = () => {
     inputDisabled: false,
     gameTime: 0,
     showResults: false,
-    isReady: false
+    isReady: false,
+    questionsAnswered: 0
   })
 
   const [showNotification, setShowNotification] = useState(false)
@@ -128,7 +130,8 @@ const Game = () => {
       currentImage: imagePath,
       options,
       usedZones: new Set([...prev.usedZones, randomZone.id]),
-      imageKey: prev.imageKey + 1
+      imageKey: prev.imageKey + 1,
+      lives: isMultipleChoice ? 1 : 2 // Reset lives for each new question
     }))
 
     // Preload next batch of images
@@ -149,7 +152,11 @@ const Game = () => {
     const isCorrect = guess.toLowerCase() === gameState.currentZone.name.toLowerCase()
 
     if (isCorrect) {
-      setGameState(prev => ({ ...prev, score: prev.score + (isMultipleChoice ? 100 : 150) }))
+      setGameState(prev => ({ 
+        ...prev, 
+        score: prev.score + (isMultipleChoice ? 100 : 150),
+        questionsAnswered: prev.questionsAnswered + 1 
+      }))
       const randomCheer = ['Nice!', 'Good job!', 'Great!', 'Awesome!', 'Perfect!']
       const random = randomCheer[Math.floor(Math.random() * randomCheer.length)]
       showGameNotification(random, 'success')
@@ -188,15 +195,18 @@ const Game = () => {
           }, 1000)
         } else {
           const zoneName = gameState.currentZone?.name || 'Unknown'
-          showGameNotification(`Game Over! The zone was ${zoneName}`, 'error')
+          showGameNotification(`Wrong! The zone was ${zoneName}. -50 points`, 'error')
           setTimeout(() => {
-            const timeBonus = calculateTimeBonus(gameState.gameTime)
             setGameState(prev => ({ 
-              ...prev, 
-              score: prev.score + timeBonus.bonus,
-              showResults: true,
-              isAnswering: true // Stop the timer
+              ...prev,
+              score: Math.max(0, prev.score - 50), // Prevent score from going below 0
+              lives: 2, // Reset lives
+              isAnswering: false,
+              correctAnswer: null,
+              inputDisabled: false
             }))
+            getNextZone()
+            setInput('')
           }, 2000)
         }
       }
@@ -237,117 +247,170 @@ const Game = () => {
   }
 
   return (
-    <Container maxW="container.xl" h="full">
+    <Container maxW="container.xl" h="full"           mt={"5rem"}>
       <VStack spacing={4} h="full">
-        {/* Score and Lives Row */}
-        <Flex 
-          justify="space-between" 
-          align="center" 
+        <Box
+          position="relative"
           w="full"
-          flexDir={{ base: "column", sm: "row" }}
-          gap={{ base: 2, sm: 0 }}
+          maxW="1200px"
+          mx="auto"
         >
-          <ScoreCounter value={gameState.score} />
+          {/* Score */}
+          <Text
+            position="absolute"
+            left="0"
+            top="-8"
+            fontSize="xl"
+            fontWeight="bold"
+            // color="green.400"
+          >
+            Score {gameState.score}
+          </Text>
+
+          {/* Lives */}
           {!isMultipleChoice && (
             <Box
+              position="absolute"
+              left="50%"
+              top="-5"
+              transform="translateX(-50%)"
               bg="rgba(10, 15, 28, 0.95)"
-              px={6}
-              py={2}
-              borderRadius="xl"
+              px={4}
+              py={1}
+              borderRadius="md"
               border="2px solid"
               borderColor="red.400"
-              minW={{ base: "full", sm: "120px" }}
+              zIndex={5}
+              width={"10rem"}
+              display={"flex"}
+              flexDir={"row"}
+              alignItems={"center"}
+              justifyContent={"space-between"}
             >
-              <Text fontSize="sm" color="gray.400" mb={1} textAlign="center">
+              <Text fontSize="sm" color="gray.400" textAlign="center">
                 Lives Left
               </Text>
               <Flex justify="center" gap={2}>
                 {Array.from({ length: gameState.lives }).map((_, i) => (
-                  <Text key={i} fontSize="xl">❤️</Text>
+                  <Text key={i} fontSize="lg">❤️</Text>
                 ))}
               </Flex>
             </Box>
           )}
-          <GameTimer 
-            isRunning={gameState.isReady && !gameState.isAnswering && !gameState.showResults} 
-            onTimeUpdate={(time) => setGameState(prev => ({ ...prev, gameTime: time }))}
-          />
-        </Flex>
 
-        <Box
-          position="relative"
-          borderRadius="xl"
-          overflow="visible"
-          boxShadow="2xl"
-          w="full"
-          maxW="1200px"
-          mx="auto"
-          mb={{ base: 1, sm: 2 }}
-          sx={{
-            aspectRatio: '16/9',
-          }}
-        >
-          {showNotification && (
-            <GameNotification
-              message={notificationText}
-              type={notificationType}
-              isVisible={showNotification}
-              containerStyle={{
-                position: 'absolute',
-                top: '-10px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                zIndex: 100
-              }}
-            />
-          )}
-          {/* Ambient light container using the actual image */}
-          <Box
+          {/* Progress Counter and Timer */}
+          <Flex
             position="absolute"
-            top="-100%"
-            left="-100%"
-            right="-100%"
-            bottom="-100%"
-            zIndex={-1}
-            style={{
-              background: gameState.currentImage ? `url(${gameState.currentImage})` : 'none',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'blur(120px) brightness(0.6) saturate(120%)',
-              opacity: 0.3,
-              transform: 'scale(2)',
-              mixBlendMode: 'soft-light',
-            }}
-          />
+            right="0"
+            top="-10"
+            gap={4}
+            align="center"
+            zIndex={5}
+          >
+            <Text
+              fontSize="md"
+              color="green.400"
+            >
+              {gameState.questionsAnswered} / {availableZones.length}
+            </Text>
+            <GameTimer 
+              isRunning={gameState.isReady && !gameState.isAnswering && !gameState.showResults} 
+              onTimeUpdate={(time) => setGameState(prev => ({ ...prev, gameTime: time }))}
+            />
+          </Flex>
 
-          {/* Main image container */}
+          {/* Main Image Container with Progress Bar */}
           <Box
             position="relative"
             borderRadius="xl"
-            overflow="hidden"
-            boxShadow="dark-lg"
-            h="full"
-            bg="rgba(0, 0, 0, 0.2)"
+            overflow="visible"
+            boxShadow="2xl"
+            w="full"
+            sx={{
+              aspectRatio: '16/9',
+            }}
           >
-            <AnimatePresence mode="wait">
-              <MotionImage
-                key={gameState.imageKey}
-                src={gameState.currentImage}
-                alt="Zone Image"
-                objectFit="contain"
-                objectPosition="center"
-                w="full"
+            {/* Progress Bar */}
+            <Box
+              position="absolute"
+              top="0"
+              left="0"
+              right="0"
+              h="3px"
+              bg="whiteAlpha.200"
+              zIndex={2}
+            >
+              <Box
                 h="full"
-                initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.5 }}
-                sx={{
-                  maxHeight: '100%',
-                  maxWidth: '100%',
+                bg="green.400"
+                transition="width 0.3s ease"
+                w={`${(gameState.questionsAnswered / availableZones.length) * 100}%`}
+              />
+            </Box>
+
+            {showNotification && (
+              <GameNotification
+                message={notificationText}
+                type={notificationType}
+                isVisible={showNotification}
+                containerStyle={{
+                  position: 'absolute',
+                  top: '50px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  zIndex: 100
                 }}
               />
-            </AnimatePresence>
+            )}
+
+            {/* Ambient light container */}
+            <Box
+              position="absolute"
+              top="-100%"
+              left="-100%"
+              right="-100%"
+              bottom="-100%"
+              zIndex={-1}
+              style={{
+                background: gameState.currentImage ? `url(${gameState.currentImage})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'blur(120px) brightness(0.6) saturate(120%)',
+                opacity: 0.3,
+                transform: 'scale(2)',
+                mixBlendMode: 'soft-light',
+              }}
+            />
+
+            {/* Main image */}
+            <Box
+              position="relative"
+              borderRadius="xl"
+              overflow="hidden"
+              boxShadow="dark-lg"
+              h="full"
+              bg="rgba(0, 0, 0, 0.2)"
+            >
+              <AnimatePresence mode="wait">
+                <MotionImage
+                  key={gameState.imageKey}
+                  src={gameState.currentImage}
+                  alt="Zone Image"
+                  objectFit="contain"
+                  objectPosition="center"
+                  w="full"
+                  h="full"
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.5 }}
+                  sx={{
+                    maxHeight: '100%',
+                    maxWidth: '100%',
+                  }}
+                />
+              </AnimatePresence>
+            </Box>
           </Box>
         </Box>
 

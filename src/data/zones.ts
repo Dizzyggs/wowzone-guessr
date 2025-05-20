@@ -52,6 +52,14 @@ export const ZONES: Zone[] = [
     faction: 'Horde'
   },
   {
+    id: 'burning-steppes',
+    name: 'Burning Steppes',
+    continent: 'Eastern Kingdoms',
+    imageFile: 'burning-steppes.jpg',
+    level: '10-20',
+    faction: 'Horde'
+  },
+  {
     id: 'silvermoon-city',
     name: 'Silvermoon City',
     continent: 'TBC',
@@ -132,6 +140,14 @@ export const ZONES: Zone[] = [
     faction: 'Neutral'
   },
   {
+    id: 'redridge-mountains',
+    name: 'Redridge Mountains',
+    continent: 'Eastern Kingdoms',
+    imageFile: 'redridge.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
     id: 'swampofsorrows',
     name: 'Swamp of Sorrows',
     continent: 'Eastern Kingdoms',
@@ -208,6 +224,151 @@ export const ZONES: Zone[] = [
     name: 'Deadwind Pass',
     continent: 'Eastern Kingdoms',
     imageFile: 'deadwind-pass.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  // KALIMDOR
+  {
+    id: 'ashenvale',
+    name: 'Ashenvale',
+    continent: 'Kalimdor',
+    imageFile: 'ashenvale.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'azshara',
+    name: 'Azshara',
+    continent: 'Kalimdor',
+    imageFile: 'azshara.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'barrens',
+    name: 'The Barrens',
+    continent: 'Kalimdor',
+    imageFile: 'barrens.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'darkshore',
+    name: 'Darkshore',
+    continent: 'Kalimdor',
+    imageFile: 'darkshore.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'desolace',
+    name: 'Desolace',
+    continent: 'Kalimdor',
+    imageFile: 'desolace.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'durotar',
+    name: 'Durotar',
+    continent: 'Kalimdor',
+    imageFile: 'durotar.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'dustwallow-marsh',
+    name: 'Dustwallow Marsh',
+    continent: 'Kalimdor',
+    imageFile: 'dustwallow-marsh.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'felwood',
+    name: 'Felwood',
+    continent: 'Kalimdor',
+    imageFile: 'felwood.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'feralas',
+    name: 'Feralas',
+    continent: 'Kalimdor',
+    imageFile: 'feralas.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'moonglade',
+    name: 'Moonglade',
+    continent: 'Kalimdor',
+    imageFile: 'moonglade.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'mulgore',
+    name: 'Mulgore',
+    continent: 'Kalimdor',
+    imageFile: 'mulgore.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'orgrimmar',
+    name: 'Orgrimmar',
+    continent: 'Kalimdor',
+    imageFile: 'orgrimmar.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'silithus',
+    name: 'Silithus',
+    continent: 'Kalimdor',
+    imageFile: 'silithus.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'stonetalon-mountains',
+    name: 'Stonetalon Mountains',
+    continent: 'Kalimdor',
+    imageFile: 'stonetalon-mountains.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'tanaris',
+    name: 'Tanaris',
+    continent: 'Kalimdor',
+    imageFile: 'tanaris.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'thousand-needles',
+    name: 'Thousand Needles',
+    continent: 'Kalimdor',
+    imageFile: 'thousand-needles.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'ungoro-crater',
+    name: `Un'Goro Crater`,
+    continent: 'Kalimdor',
+    imageFile: 'ungoro.jpg',
+    level: '30-45',
+    faction: 'Neutral'
+  },
+  {
+    id: 'winterspring',
+    name: `Winterspring`,
+    continent: 'Kalimdor',
+    imageFile: 'winterspring.jpg',
     level: '30-45',
     faction: 'Neutral'
   },

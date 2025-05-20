@@ -36,7 +36,7 @@ const GameNotification: React.FC<GameNotificationProps> = ({ message, points, is
       {isVisible && (
         <Box
           position="fixed"
-          top="8.2rem"
+          top="55rem"
           left="50%"
           zIndex={2000}
           style={{ transform: 'translateX(-50%)', ...containerStyle }}
