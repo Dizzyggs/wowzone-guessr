@@ -26,7 +26,7 @@ import './Game.scss'
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 const MotionImage = motion(Image)
-const MotionSuggestionBox = motion(Box)
+// const MotionSuggestionBox = motion(Box)
 
 interface GameState {
   score: number
