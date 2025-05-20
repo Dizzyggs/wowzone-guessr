@@ -256,16 +256,13 @@ const Game = () => {
           mx="auto"
         >
           {/* Score */}
-          <Text
+          <Box
             position="absolute"
             left="0"
             top="-8"
-            fontSize="xl"
-            fontWeight="bold"
-            // color="green.400"
           >
-            Score {gameState.score}
-          </Text>
+            <ScoreCounter value={gameState.score} />
+          </Box>
 
           {/* Lives */}
           {!isMultipleChoice && (
