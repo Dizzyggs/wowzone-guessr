@@ -462,10 +462,10 @@ export const ZONES: Zone[] = [
     faction: 'Neutral'
   },
   {
-    id: 'dark-portal',
-    name: 'Dark Portal',
+    id: 'darna',
+    name: 'Darnassus',
     continent: 'TBC',
-    imageFile: 'dark-portal.jpg',
+    imageFile: 'darnassus.jpg',
     level: '67-70',
     faction: 'Neutral'
   },
