@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import {
   IconButton,
   Menu,
@@ -5,71 +6,83 @@ import {
   MenuList,
   MenuItem,
   Icon,
+  useDisclosure
 } from '@chakra-ui/react'
-import { FaBars, FaGamepad, FaTrophy } from 'react-icons/fa'
-import { Link as RouterLink } from 'react-router-dom'
+import { FaBars, FaGamepad, FaTrophy, FaComments } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
 
 const MobileMenu = () => {
+  const navigate = useNavigate()
+  const { isOpen, onOpen, onClose } = useDisclosure()
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+
+  const handleNavigation = (path: string) => {
+    navigate(path)
+    onClose()
+  }
+
   return (
-    <Menu>
+    <Menu isOpen={isOpen} onClose={onClose}>
       <MenuButton
+        ref={menuButtonRef}
         as={IconButton}
-        aria-label="Options"
+        aria-label="Menu"
         icon={<Icon as={FaBars} />}
         variant="ghost"
         color="white"
-        _hover={{ bg: 'whiteAlpha.200' }}
-        _active={{ bg: 'whiteAlpha.300' }}
-        display={{ base: 'flex', md: 'none' }}
+        onClick={onOpen}
+        _hover={{
+          bg: "whiteAlpha.200"
+        }}
       />
       <MenuList
         bg="rgba(10, 15, 28, 0.95)"
-        borderColor="purple.500"
-        boxShadow="dark-lg"
-        backdropFilter="blur(10px)"
-        zIndex={1000}
-        py={2}
         border="2px solid"
+        borderColor="purple.500"
+        py={2}
+        zIndex={1000}
       >
         <MenuItem
-          as={RouterLink}
-          to="/play"
-          icon={<Icon as={FaGamepad} color="blue.400" />}
+          py={3}
+          bg="rgba(0, 0, 0, 0.2)"
           _hover={{
             bg: 'rgba(255, 255, 255, 0.1)',
-            boxShadow: 'inset 0 0 10px rgba(66, 153, 225, 0.3)'
+            boxShadow: '0 0 15px rgba(66, 153, 225, 0.4)'
           }}
-          _focus={{
-            bg: 'rgba(255, 255, 255, 0.1)',
-            boxShadow: 'inset 0 0 10px rgba(66, 153, 225, 0.3)'
-          }}
-          bg="rgba(0, 0, 0, 0.2)"
-          color="white"
+          onClick={() => handleNavigation('/play')}
+          icon={<Icon as={FaGamepad} color="blue.400" />}
           fontSize="lg"
-          py={3}
-          transition="all 0.2s"
+          color="white"
         >
           Play Now
         </MenuItem>
         <MenuItem
-          as={RouterLink}
-          to="/leaderboard"
-          icon={<Icon as={FaTrophy} color="purple.500" />}
+          py={3}
+          bg="rgba(0, 0, 0, 0.2)"
           _hover={{
             bg: 'rgba(255, 255, 255, 0.1)',
-            boxShadow: 'inset 0 0 10px rgba(159, 122, 234, 0.3)'
+            boxShadow: '0 0 15px rgba(147, 51, 234, 0.4)'
           }}
-          _focus={{
-            bg: 'rgba(255, 255, 255, 0.1)',
-            boxShadow: 'inset 0 0 10px rgba(159, 122, 234, 0.3)'
-          }}
-          bg="rgba(0, 0, 0, 0.2)"
-          color="white"
+          onClick={() => handleNavigation('/leaderboard')}
+          icon={<Icon as={FaTrophy} color="purple.400" />}
           fontSize="lg"
-          py={3}
-          transition="all 0.2s"
+          color="white"
         >
           Leaderboard
+        </MenuItem>
+        <MenuItem
+          py={3}
+          bg="rgba(0, 0, 0, 0.2)"
+          _hover={{
+            bg: 'rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 0 15px rgba(66, 153, 225, 0.4)'
+          }}
+          onClick={() => handleNavigation('/feedback')}
+          icon={<Icon as={FaComments} color="blue.400" />}
+          fontSize="lg"
+          color="white"
+        >
+          Feedback
         </MenuItem>
       </MenuList>
     </Menu>

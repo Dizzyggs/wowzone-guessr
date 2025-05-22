@@ -1,5 +1,5 @@
 import { db } from './firebase'
-import { collection, query, where, getDocs, addDoc, } from 'firebase/firestore'
+import { collection, query, where, getDocs, addDoc, orderBy, limit } from 'firebase/firestore'
 
 interface LeaderboardEntry {
   playerName: string
@@ -8,6 +8,14 @@ interface LeaderboardEntry {
   timeElapsed: number
   mode: 'easy' | 'hard'
   timestamp: Date
+}
+
+interface Feedback {
+  message: string
+  rating: number
+  timestamp: Date
+  status: 'new' | 'in-progress' | 'completed'
+  response?: string
 }
 
 // Check if a player already exists and compare scores
@@ -102,5 +110,61 @@ export const getPlayerBestScore = async (playerName: string, mode: 'easy' | 'har
   } catch (error) {
     console.error('Error fetching player best score:', error)
     return null
+  }
+}
+
+export const submitFeedback = async (message: string, rating: number): Promise<{ success: boolean, message: string }> => {
+  try {
+    // Get reference to feedback collection
+    const feedbackRef = collection(db, 'feedback')
+
+    // Create the document
+    const docRef = await addDoc(feedbackRef, {
+      message,
+      rating,
+      timestamp: new Date(),
+      status: 'new'
+    })
+
+    if (!docRef.id) {
+      throw new Error('Failed to create feedback document')
+    }
+    
+    return {
+      success: true,
+      message: 'Feedback submitted successfully!'
+    }
+  } catch (error) {
+    console.error('Error submitting feedback:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error submitting feedback. Please try again.'
+    }
+  }
+}
+
+export const getLatestFeedback = async (count: number = 50): Promise<Feedback[]> => {
+  try {
+    const feedbackRef = collection(db, 'feedback')
+    const q = query(
+      feedbackRef,
+      orderBy('timestamp', 'desc'),
+      limit(count)
+    )
+    
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        ...data,
+        timestamp: data.timestamp?.toDate() || new Date(), // Handle potential missing timestamp
+        rating: data.rating || 0, // Handle potential missing rating
+        status: data.status || 'new', // Handle potential missing status
+        message: data.message || '' // Handle potential missing message
+      } as Feedback
+    })
+  } catch (error) {
+    console.error('Error fetching feedback:', error)
+    return []
   }
 }

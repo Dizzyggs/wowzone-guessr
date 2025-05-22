@@ -1,6 +1,6 @@
 import { Box, Flex, Heading, Button, Container, Icon } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
-import { FaGamepad, FaTrophy, FaDragon } from 'react-icons/fa'
+import { FaGamepad, FaTrophy, FaDragon, FaComments } from 'react-icons/fa'
 import MobileMenu from './MobileMenu'
 
 const Navbar = () => {
@@ -37,39 +37,56 @@ const Navbar = () => {
           </Heading>
           
           {/* Desktop Navigation */}
-          <Flex gap={4} display={{ base: 'none', md: 'flex' }}>
+          <Flex 
+            display={{ base: "none", md: "flex" }} 
+            gap={4}
+          >
             <Button
               as={RouterLink}
               to="/play"
-              colorScheme="blue"
-              variant="solid"
+              leftIcon={<Icon as={FaGamepad} />}
+              variant="ghost"
+              color="white"
               _hover={{
-                transform: 'translateY(-2px)',
-                boxShadow: 'lg',
+                bg: "whiteAlpha.200",
+                transform: "translateY(-2px)"
               }}
               transition="all 0.2s"
-              leftIcon={<Icon as={FaGamepad} w={5} h={5} />}
             >
               Play Now
             </Button>
             <Button
               as={RouterLink}
               to="/leaderboard"
+              leftIcon={<Icon as={FaTrophy} />}
               variant="ghost"
               color="white"
               _hover={{
-                bg: 'whiteAlpha.200',
-                transform: 'translateY(-2px)',
+                bg: "whiteAlpha.200",
+                transform: "translateY(-2px)"
               }}
               transition="all 0.2s"
-              leftIcon={<Icon as={FaTrophy} w={5} h={5} />}
             >
               Leaderboard
+            </Button>
+            <Button
+              as={RouterLink}
+              to="/feedback"
+              leftIcon={<Icon as={FaComments} />}
+              variant="ghost"
+              color="white"
+              _hover={{
+                bg: "whiteAlpha.200",
+                transform: "translateY(-2px)"
+              }}
+              transition="all 0.2s"
+            >
+              Feedback
             </Button>
           </Flex>
 
           {/* Mobile Menu */}
-          <Box display={{ base: 'block', md: 'none' }}>
+          <Box display={{ base: "block", md: "none" }}>
             <MobileMenu />
           </Box>
         </Flex>

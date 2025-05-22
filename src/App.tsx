@@ -8,6 +8,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import ErrorBoundary from './components/ErrorBoundary'
 // import { Router } from 'react-router-dom'
 import theme from './theme'
+import FeedbackPage from './pages/FeedbackPage'
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
             <Route path="/play" element={<GameModeSelect />} />
             <Route path="/play/:mode" element={<Game />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
             {/* Add more routes as needed */}
           </Route>
         </Routes>
