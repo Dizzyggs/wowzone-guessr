@@ -14,8 +14,6 @@ import {
   Icon,
   Text,
   Box,
-  Alert,
-  AlertIcon,
   Flex
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
