@@ -10,8 +10,6 @@ import {
   Text,
   VStack,
   // useBreakpointValue,
-  useToast,
-  Progress,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
