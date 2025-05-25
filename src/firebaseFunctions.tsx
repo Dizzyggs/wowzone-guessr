@@ -1,6 +1,15 @@
 import { db } from './firebase'
-import { collection, query, where, getDocs, addDoc, orderBy, limit, Timestamp, doc, updateDoc, startAfter } from 'firebase/firestore'
-import type { DocumentData } from 'firebase/firestore'
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  orderBy,
+  limit,
+  doc,
+  updateDoc
+} from 'firebase/firestore'
 
 interface LeaderboardEntry {
   playerName: string
@@ -22,9 +31,11 @@ interface Feedback {
 }
 
 interface Changelog {
-  id: string
+  id?: string
   title: string
-  description: string
+  added?: string
+  changed?: string
+  removed?: string
   date: Date
   type: 'feature' | 'bugfix' | 'improvement'
 }
@@ -220,17 +231,38 @@ export const getAdminStats = async () => {
 
 export const submitChangelog = async (
   title: string,
-  description: string,
-  type: 'feature' | 'bugfix' | 'improvement'
+  type: 'feature' | 'bugfix' | 'improvement',
+  sections: {
+    added?: string
+    changed?: string
+    removed?: string
+  }
 ): Promise<{ success: boolean; message: string }> => {
   try {
-    const changelogRef = collection(db, 'changelogs')
-    const docRef = await addDoc(changelogRef, {
+    if (!title || (!sections.added && !sections.changed && !sections.removed)) {
+      throw new Error('Title and at least one section are required')
+    }
+
+    // Create document data with only defined fields
+    const docData: any = {
       title,
-      description,
       type,
       date: new Date()
-    })
+    }
+
+    // Only add sections that have content
+    if (sections.added?.trim()) {
+      docData.added = sections.added.trim()
+    }
+    if (sections.changed?.trim()) {
+      docData.changed = sections.changed.trim()
+    }
+    if (sections.removed?.trim()) {
+      docData.removed = sections.removed.trim()
+    }
+
+    const changelogRef = collection(db, 'changelogs')
+    const docRef = await addDoc(changelogRef, docData)
 
     if (!docRef.id) {
       throw new Error('Failed to create changelog entry')
@@ -264,7 +296,9 @@ export const getChangelogs = async (count: number = 50): Promise<Changelog[]> =>
       return {
         id: doc.id,
         title: data.title || '',
-        description: data.description || '',
+        added: data.added || '',
+        changed: data.changed || '',
+        removed: data.removed || '',
         date: data.date?.toDate() || new Date(),
         type: data.type || 'improvement'
       } as Changelog

@@ -1,32 +1,41 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Container,
-  VStack,
   Heading,
+  VStack,
   Box,
   Text,
-  Divider,
   Badge,
-  Icon,
+  useDisclosure,
   Flex,
+  Spinner,
+  Center
 } from '@chakra-ui/react'
-import { FaClock } from 'react-icons/fa'
+import { motion } from 'framer-motion'
 import { getChangelogs } from '../firebaseFunctions'
+import ChangelogDetailModal from '../components/ChangelogDetailModal'
+
+const MotionBox = motion(Box)
 
 interface Changelog {
-  id: string
+  id?: string
   title: string
-  description: string
-  date: Date
   type: 'feature' | 'bugfix' | 'improvement'
+  added?: string
+  changed?: string
+  removed?: string
+  date: Date
 }
 
 const Changelog = () => {
   const [changelogs, setChangelogs] = useState<Changelog[]>([])
+  const [selectedChangelog, setSelectedChangelog] = useState<Changelog | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   useEffect(() => {
     const loadChangelogs = async () => {
+      setIsLoading(true)
       const data = await getChangelogs()
       setChangelogs(data)
       setIsLoading(false)
@@ -34,6 +43,11 @@ const Changelog = () => {
 
     loadChangelogs()
   }, [])
+
+  const handleChangelogClick = (changelog: Changelog) => {
+    setSelectedChangelog(changelog)
+    onOpen()
+  }
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -45,44 +59,68 @@ const Changelog = () => {
   }
 
   return (
-    <Container maxW="container.lg" py={8}>
-      <VStack spacing={8} align="stretch">
-        <Heading size="xl" textAlign="center">Changelog</Heading>
+    <Container maxW="container.xl" py={8}>
+      <Heading size="xl" color="white" mb={8} textAlign="center">
+        Changelog
+      </Heading>
 
-        {isLoading ? (
-          <Text textAlign="center" color="gray.400">Loading updates...</Text>
-        ) : changelogs.length === 0 ? (
-          <Text textAlign="center" color="gray.400">No updates yet.</Text>
-        ) : (
-          changelogs.map((log, index) => (
-            <Box
-              key={log.id}
+      {isLoading ? (
+        <Center py={20}>
+          <VStack spacing={4}>
+            <Spinner size="xl" color="blue.500" thickness="4px" />
+            <Text color="white">Loading changelogs...</Text>
+          </VStack>
+        </Center>
+      ) : changelogs.length === 0 ? (
+        <Center py={20}>
+          <Text color="gray.400">No changelog entries yet.</Text>
+        </Center>
+      ) : (
+        <VStack spacing={4} align="stretch">
+          {changelogs.map((changelog, index) => (
+            <MotionBox
+              key={changelog.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
               bg="rgba(10, 15, 28, 0.95)"
               p={6}
-              borderRadius="xl"
+              borderRadius="lg"
               border="2px solid"
               borderColor="blue.400"
-              boxShadow="0 4px 12px rgba(66, 153, 225, 0.2)"
+              cursor="pointer"
+              onClick={() => handleChangelogClick(changelog)}
+              _hover={{
+                transform: 'translateY(-2px)',
+                boxShadow: '0 8px 32px rgba(66, 153, 225, 0.4)',
+                transition: 'all 0.2s'
+              }}
             >
-              <VStack align="stretch" spacing={4}>
-                <Flex justify="space-between" align="center" wrap="wrap" gap={2}>
-                  <Heading size="md">{log.title}</Heading>
-                  <Flex align="center" gap={2}>
-                    <Badge colorScheme={getTypeColor(log.type)} px={2} py={1}>
-                      {log.type}
-                    </Badge>
-                    <Flex align="center" color="gray.400" fontSize="sm">
-                      <Icon as={FaClock} mr={2} />
-                      {log.date.toLocaleDateString()}
-                    </Flex>
-                  </Flex>
+              <Flex justify="space-between" align="center">
+                <Heading size="md" color="white">
+                  {changelog.title}
+                </Heading>
+                <Flex align="center" gap={4}>
+                  <Badge colorScheme={getTypeColor(changelog.type)} fontSize="0.8em">
+                    {changelog.type.toUpperCase()}
+                  </Badge>
+                  <Text color="gray.400" fontSize="sm">
+                    {changelog.date.toLocaleDateString()}
+                  </Text>
                 </Flex>
-                <Text whiteSpace="pre-wrap">{log.description}</Text>
-              </VStack>
-            </Box>
-          ))
-        )}
-      </VStack>
+              </Flex>
+            </MotionBox>
+          ))}
+        </VStack>
+      )}
+
+      {selectedChangelog && (
+        <ChangelogDetailModal
+          isOpen={isOpen}
+          onClose={onClose}
+          changelog={selectedChangelog}
+        />
+      )}
     </Container>
   )
 }

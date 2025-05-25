@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Box,
   Button,
@@ -58,7 +58,19 @@ export default function AdminDashboard() {
   
   // Modal states for changelog
   const { isOpen: isChangelogOpen, onOpen: onChangelogOpen, onClose: onChangelogClose } = useDisclosure()
-  const [changelogData, setChangelogData] = useState({ title: '', description: '', type: 'feature' })
+  const [changelogData, setChangelogData] = useState<{
+    title: string;
+    type: 'feature' | 'bugfix' | 'improvement';
+    added: string;
+    changed: string;
+    removed: string;
+  }>({
+    title: '',
+    type: 'feature',
+    added: '',
+    changed: '',
+    removed: ''
+  })
   
   // Modal states for feedback response
   const { isOpen: isResponseOpen, onOpen: onResponseOpen, onClose: onResponseClose } = useDisclosure()
@@ -103,10 +115,10 @@ export default function AdminDashboard() {
   }, [navigate, currentPage])
 
   const handleSubmitChangelog = async () => {
-    if (!changelogData.title || !changelogData.description) {
+    if (!changelogData.title || (!changelogData.added && !changelogData.changed && !changelogData.removed)) {
       toast({
-        title: 'Missing fields',
-        description: 'Please fill in all required fields',
+        title: 'Missing required fields',
+        description: 'Please provide a title and at least one section (Added, Changed/Fixed, or Removed)',
         status: 'error',
         duration: 3000,
       })
@@ -116,8 +128,12 @@ export default function AdminDashboard() {
     setIsSubmitting(true)
     const result = await submitChangelog(
       changelogData.title,
-      changelogData.description,
-      changelogData.type as 'feature' | 'bugfix' | 'improvement'
+      changelogData.type,
+      {
+        added: changelogData.added || undefined,
+        changed: changelogData.changed || undefined,
+        removed: changelogData.removed || undefined
+      }
     )
 
     toast({
@@ -128,7 +144,7 @@ export default function AdminDashboard() {
     })
 
     if (result.success) {
-      setChangelogData({ title: '', description: '', type: 'feature' })
+      setChangelogData({ title: '', type: 'feature', added: '', changed: '', removed: '' })
       onChangelogClose()
     }
     setIsSubmitting(false)
@@ -290,42 +306,161 @@ export default function AdminDashboard() {
         )}
 
         {/* Changelog Modal */}
-        <Modal isOpen={isChangelogOpen} onClose={onChangelogClose}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Create New Changelog</ModalHeader>
+        <Modal isOpen={isChangelogOpen} onClose={onChangelogClose} size="xl" isCentered>
+          <ModalOverlay backdropFilter="blur(10px)" bg="rgba(0, 0, 0, 0.6)" />
+          <ModalContent
+            bg="rgba(10, 15, 28, 0.95)"
+            border="2px solid"
+            borderColor="blue.400"
+            boxShadow="0 8px 32px rgba(66, 153, 225, 0.4)"
+            mx={4}
+          >
+            <ModalHeader color="white" borderBottom="1px solid" borderColor="whiteAlpha.200">
+              Create New Changelog
+            </ModalHeader>
             <ModalBody>
-              <VStack spacing={4}>
-                <Input
-                  placeholder="Title"
-                  value={changelogData.title}
-                  onChange={(e) => setChangelogData(prev => ({ ...prev, title: e.target.value }))}
-                />
-                <Select
-                  value={changelogData.type}
-                  onChange={(e) => setChangelogData(prev => ({ ...prev, type: e.target.value }))}
-                >
-                  <option value="feature">Feature</option>
-                  <option value="bugfix">Bug Fix</option>
-                  <option value="improvement">Improvement</option>
-                </Select>
-                <Textarea
-                  placeholder="Description"
-                  value={changelogData.description}
-                  onChange={(e) => setChangelogData(prev => ({ ...prev, description: e.target.value }))}
-                />
+              <VStack spacing={4} align="stretch">
+                <Box>
+                  <Text color="gray.400" fontSize="sm" mb={2}>Title:</Text>
+                  <Input
+                    placeholder="Enter changelog title"
+                    value={changelogData.title}
+                    onChange={(e) => setChangelogData(prev => ({ ...prev, title: e.target.value }))}
+                    bg="whiteAlpha.100"
+                    border="1px solid"
+                    borderColor="whiteAlpha.300"
+                    color="white"
+                    _hover={{
+                      borderColor: "blue.400"
+                    }}
+                    _focus={{
+                      borderColor: "blue.400",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)"
+                    }}
+                    _placeholder={{
+                      color: "whiteAlpha.400"
+                    }}
+                  />
+                </Box>
+
+                <Box>
+                  <Text color="gray.400" fontSize="sm" mb={2}>Type:</Text>
+                  <Select
+                    value={changelogData.type}
+                    onChange={(e) => setChangelogData(prev => ({ ...prev, type: e.target.value as 'feature' | 'bugfix' | 'improvement' }))}
+                    bg="whiteAlpha.100"
+                    border="1px solid"
+                    borderColor="whiteAlpha.300"
+                    color="white"
+                    _hover={{
+                      borderColor: "blue.400"
+                    }}
+                    _focus={{
+                      borderColor: "blue.400",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)"
+                    }}
+                  >
+                    <option style={{ backgroundColor: "rgb(10, 15, 28)" }} value="feature">Feature</option>
+                    <option style={{ backgroundColor: "rgb(10, 15, 28)" }} value="bugfix">Bug Fix</option>
+                    <option style={{ backgroundColor: "rgb(10, 15, 28)" }} value="improvement">Improvement</option>
+                  </Select>
+                </Box>
+
+                <Box>
+                  <Text color="gray.400" fontSize="sm" mb={2}>Added (optional):</Text>
+                  <Text color="gray.500" fontSize="xs" mb={2}>Use markdown format</Text>
+                  <Textarea
+                    placeholder="- New feature 1&#10;- New feature 2"
+                    value={changelogData.added}
+                    onChange={(e) => setChangelogData(prev => ({ ...prev, added: e.target.value }))}
+                    minH="100px"
+                    bg="whiteAlpha.100"
+                    border="1px solid"
+                    borderColor="whiteAlpha.300"
+                    color="white"
+                    _hover={{
+                      borderColor: "blue.400"
+                    }}
+                    _focus={{
+                      borderColor: "blue.400",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)"
+                    }}
+                    _placeholder={{
+                      color: "whiteAlpha.400"
+                    }}
+                  />
+                </Box>
+
+                <Box>
+                  <Text color="gray.400" fontSize="sm" mb={2}>Changed/Fixed (optional):</Text>
+                  <Text color="gray.500" fontSize="xs" mb={2}>Use markdown format</Text>
+                  <Textarea
+                    placeholder="- Updated feature 1&#10;- Fixed bug 1"
+                    value={changelogData.changed}
+                    onChange={(e) => setChangelogData(prev => ({ ...prev, changed: e.target.value }))}
+                    minH="100px"
+                    bg="whiteAlpha.100"
+                    border="1px solid"
+                    borderColor="whiteAlpha.300"
+                    color="white"
+                    _hover={{
+                      borderColor: "blue.400"
+                    }}
+                    _focus={{
+                      borderColor: "blue.400",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)"
+                    }}
+                    _placeholder={{
+                      color: "whiteAlpha.400"
+                    }}
+                  />
+                </Box>
+
+                <Box>
+                  <Text color="gray.400" fontSize="sm" mb={2}>Removed (optional):</Text>
+                  <Text color="gray.500" fontSize="xs" mb={2}>Use markdown format</Text>
+                  <Textarea
+                    placeholder="- Removed feature 1&#10;- Deprecated feature 2"
+                    value={changelogData.removed}
+                    onChange={(e) => setChangelogData(prev => ({ ...prev, removed: e.target.value }))}
+                    minH="100px"
+                    bg="whiteAlpha.100"
+                    border="1px solid"
+                    borderColor="whiteAlpha.300"
+                    color="white"
+                    _hover={{
+                      borderColor: "blue.400"
+                    }}
+                    _focus={{
+                      borderColor: "blue.400",
+                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)"
+                    }}
+                    _placeholder={{
+                      color: "whiteAlpha.400"
+                    }}
+                  />
+                </Box>
               </VStack>
             </ModalBody>
-            <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onChangelogClose}>
+            <ModalFooter borderTop="1px solid" borderColor="whiteAlpha.200">
+              <Button
+                variant="ghost"
+                mr={3}
+                onClick={onChangelogClose}
+                color="white"
+                _hover={{
+                  bg: "whiteAlpha.200"
+                }}
+              >
                 Cancel
               </Button>
               <Button
                 colorScheme="blue"
                 onClick={handleSubmitChangelog}
                 isLoading={isSubmitting}
+                loadingText="Creating..."
               >
-                Create
+                Create Changelog
               </Button>
             </ModalFooter>
           </ModalContent>
