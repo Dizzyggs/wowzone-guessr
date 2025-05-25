@@ -25,9 +25,8 @@ const AdminLogin = () => {
   const handleLogin = () => {
     setIsLoading(true)
     
-    // Simple authentication
-    if (username === 'freddan11' && password === 'freddan11ok') {
-      // Set a session flag
+    // Use environment variables for authentication
+    if (username === import.meta.env.VITE_ADMIN_ACC && password === import.meta.env.VITE_ADMIN_PW) {
       sessionStorage.setItem('isAdminAuthenticated', 'true')
       
       toast({
@@ -37,7 +36,6 @@ const AdminLogin = () => {
         isClosable: true,
       })
       
-      // Navigate to admin dashboard
       navigate('/admin/dashboard')
     } else {
       toast({

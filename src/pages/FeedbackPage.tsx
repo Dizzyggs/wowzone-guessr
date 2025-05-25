@@ -14,16 +14,20 @@ import {
   Icon,
   Flex,
   HStack,
-  VStack
+  VStack,
+  Select,
+  Center,
+  Spinner
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
-import { FaComments, FaStar } from 'react-icons/fa'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FaComments, FaStar, FaSort } from 'react-icons/fa'
 import { getLatestFeedback } from '../firebaseFunctions'
 import FeedbackModal from '../components/FeedbackModal'
 import FeedbackDetailModal from '../components/FeedbackDetailModal'
 
 const MotionBox = motion(Box)
 const MotionCard = motion(Card)
+const MotionSelect = motion(Select)
 
 interface Feedback {
   message: string
@@ -39,17 +43,48 @@ const FeedbackPage = () => {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null)
   const { isOpen: isSubmitOpen, onOpen: onSubmitOpen, onClose: onSubmitClose } = useDisclosure()
   const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure()
+  const [sortFilter, setSortFilter] = useState('newest')
 
   const loadFeedback = async () => {
     setIsLoading(true)
-    const data = await getLatestFeedback()
-    setFeedback(data)
+    try {
+      const feedbackData = await getLatestFeedback()
+      let sortedFeedback = [...feedbackData]
+      
+      switch (sortFilter) {
+        case 'newest':
+          sortedFeedback.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+          break
+        case 'oldest':
+          sortedFeedback.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+          break
+        case 'completed':
+          sortedFeedback = sortedFeedback.filter(f => f.status === 'completed')
+          break
+        case 'in-progress':
+          sortedFeedback = sortedFeedback.filter(f => f.status === 'in-progress')
+          break
+        case 'pending':
+          sortedFeedback = sortedFeedback.filter(f => f.status === 'new')
+          break
+        case 'answered':
+          sortedFeedback = sortedFeedback.filter(f => f.response)
+          break
+        case 'unanswered':
+          sortedFeedback = sortedFeedback.filter(f => !f.response)
+          break
+      }
+      
+      setFeedback(sortedFeedback)
+    } catch (error) {
+      console.error('Error loading feedback:', error)
+    }
     setIsLoading(false)
   }
 
   useEffect(() => {
     loadFeedback()
-  }, [isSubmitOpen])
+  }, [sortFilter])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -91,79 +126,117 @@ const FeedbackPage = () => {
           </Button>
         </Flex>
 
-        {isLoading ? (
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} height="200px" borderRadius="lg" />
-            ))}
-          </SimpleGrid>
-        ) : feedback.length === 0 ? (
-          <Card bg="whiteAlpha.100" borderRadius="lg">
-            <CardBody textAlign="center">
-              <Text>No feedback submitted yet. Be the first one!</Text>
-            </CardBody>
-          </Card>
-        ) : (
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-            {feedback.map((item, index) => (
-              <MotionCard
-                key={index}
-                bg="whiteAlpha.100"
-                borderRadius="lg"
-                cursor="pointer"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                onClick={() => handleFeedbackClick(item)}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
-                }}
-              >
-                <CardBody>
-                  <VStack align="stretch" spacing={3}>
-                    <Flex justify="space-between" align="center">
-                      <Badge
-                        colorScheme={getStatusColor(item.status)}
-                        px={2}
-                        py={1}
-                        borderRadius="full"
+        <Box maxW="300px" mb={6}>
+          <MotionSelect
+            icon={<Icon as={FaSort} />}
+            value={sortFilter}
+            onChange={(e) => setSortFilter(e.target.value)}
+            bg="gray.900"
+            borderColor="whiteAlpha.300"
+            _hover={{
+              borderColor: "blue.400",
+              transform: "translateY(-1px)"
+            }}
+            _focus={{
+              borderColor: "blue.400",
+              boxShadow: "0 0 0 1px #4299E1"
+            }}
+            transition="all 0.2s"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <option style={{ backgroundColor: "#1A202C" }} value="newest">Newest First</option>
+            <option style={{ backgroundColor: "#1A202C" }} value="oldest">Oldest First</option>
+            <option style={{ backgroundColor: "#1A202C" }} value="completed">Completed</option>
+            <option style={{ backgroundColor: "#1A202C" }} value="in-progress">In Progress</option>
+            <option style={{ backgroundColor: "#1A202C" }} value="pending">Pending</option>
+            <option style={{ backgroundColor: "#1A202C" }} value="answered">Answered</option>
+            <option style={{ backgroundColor: "#1A202C" }} value="unanswered">Unanswered</option>
+          </MotionSelect>
+        </Box>
+
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <Center py={8} as={motion.div} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Spinner size="xl" color="blue.400" thickness="4px" speed="0.8s" />
+            </Center>
+          ) : feedback.length === 0 ? (
+            <Center py={8} as={motion.div} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Text color="whiteAlpha.700">No feedback found matching the selected filter.</Text>
+            </Center>
+          ) : (
+            <SimpleGrid 
+              columns={{ base: 1, md: 2, lg: 3 }} 
+              spacing={4}
+              as={motion.div}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {feedback.map((item, index) => (
+                <MotionCard
+                  key={index}
+                  bg="gray.900"
+                  borderColor="whiteAlpha.100"
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  cursor="pointer"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  onClick={() => handleFeedbackClick(item)}
+                  _hover={{
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                    borderColor: "blue.400"
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <CardBody>
+                    <VStack align="stretch" spacing={3}>
+                      <Flex justify="space-between" align="center">
+                        <Badge
+                          colorScheme={getStatusColor(item.status)}
+                          px={2}
+                          py={1}
+                          borderRadius="full"
+                        >
+                          {item.status}
+                        </Badge>
+                        <Text fontSize="sm" color="whiteAlpha.700">
+                          {item.timestamp.toLocaleDateString()}
+                        </Text>
+                      </Flex>
+                      <HStack spacing={1}>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Icon
+                            key={i}
+                            as={FaStar}
+                            w={4}
+                            h={4}
+                            color={i < item.rating ? "yellow.400" : "gray.500"}
+                          />
+                        ))}
+                      </HStack>
+                      <Text
+                        noOfLines={3}
+                        fontSize="md"
+                        color="white"
                       >
-                        {item.status}
-                      </Badge>
-                      <Text fontSize="sm" color="whiteAlpha.700">
-                        {item.timestamp.toLocaleDateString()}
+                        {item.message}
                       </Text>
-                    </Flex>
-                    <HStack spacing={1}>
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Icon
-                          key={i}
-                          as={FaStar}
-                          w={4}
-                          h={4}
-                          color={i < item.rating ? "yellow.400" : "gray.500"}
-                        />
-                      ))}
-                    </HStack>
-                    <Text
-                      noOfLines={3}
-                      fontSize="md"
-                      color="white"
-                    >
-                      {item.message}
-                    </Text>
-                    {item.response && (
-                      <Badge colorScheme="blue" alignSelf="flex-start">
-                        Has Response
-                      </Badge>
-                    )}
-                  </VStack>
-                </CardBody>
-              </MotionCard>
-            ))}
-          </SimpleGrid>
-        )}
+                      {item.response && (
+                        <Badge colorScheme="blue" alignSelf="flex-start">
+                          Has Response
+                        </Badge>
+                      )}
+                    </VStack>
+                  </CardBody>
+                </MotionCard>
+              ))}
+            </SimpleGrid>
+          )}
+        </AnimatePresence>
       </MotionBox>
 
       <FeedbackModal isOpen={isSubmitOpen} onClose={onSubmitClose} />
