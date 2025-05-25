@@ -10,6 +10,8 @@ import {
   Text,
   VStack,
   // useBreakpointValue,
+  useToast,
+  Progress,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -20,6 +22,7 @@ import ScoreCounter from '../components/ScoreCounter'
 import GameTimer from '../components/GameTimer'
 import ResultsModal from '../components/ResultsModal'
 import ReadyModal from '../components/ReadyModal'
+import ZoomWarning from '../components/ZoomWarning'
 import './Game.scss'
 
 const MotionBox = motion(Box)
@@ -246,7 +249,8 @@ const Game = () => {
   }
 
   return (
-    <Container maxW="container.xl" h="full"           mt={"5rem"}>
+    <Container maxW="container.xl" py={8} mt="5rem">
+      <ZoomWarning isPlaying={true} />
       <VStack spacing={4} h="full">
         <Box
           position="relative"
