@@ -37,7 +37,7 @@ const ChangelogDetailModal = ({ isOpen, onClose, changelog }: ChangelogDetailMod
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered>
       <ModalOverlay backdropFilter="blur(10px)" bg="rgba(0, 0, 0, 0.6)" />
       <ModalContent
         bg="rgba(10, 15, 28, 0.95)"
