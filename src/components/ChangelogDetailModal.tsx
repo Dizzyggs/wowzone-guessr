@@ -10,7 +10,6 @@ import {
   Box,
   Text,
   Badge,
-  Divider
 } from '@chakra-ui/react'
 import ReactMarkdown from 'react-markdown'
 

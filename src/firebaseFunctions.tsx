@@ -40,15 +40,6 @@ interface Changelog {
   type: 'feature' | 'bugfix' | 'improvement'
 }
 
-interface Score {
-  playerName: string
-  score: number
-  questionsAnswered: number
-  timeElapsed: number
-  mode: 'easy' | 'hard'
-  timestamp: Date
-}
-
 // Check if a player already exists and compare scores
 export const checkAndStoreScore = async (entry: Omit<LeaderboardEntry, 'timestamp'>): Promise<{ 
   success: boolean, 

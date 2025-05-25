@@ -5,7 +5,6 @@ import {
   VStack,
   Input,
   Button,
-  Text,
   useToast,
   InputGroup,
   InputRightElement,
