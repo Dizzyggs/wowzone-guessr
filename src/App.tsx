@@ -9,6 +9,9 @@ import ErrorBoundary from './components/ErrorBoundary'
 // import { Router } from 'react-router-dom'
 import theme from './theme'
 import FeedbackPage from './pages/FeedbackPage'
+import AdminLogin from './pages/AdminLogin'
+import AdminDashboard from './pages/AdminDashboard'
+import Changelog from './pages/Changelog'
 
 const App = () => {
   return (
@@ -21,8 +24,12 @@ const App = () => {
             <Route path="/play/:mode" element={<Game />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/feedback" element={<FeedbackPage />} />
+            <Route path="/changelog" element={<Changelog />} />
             {/* Add more routes as needed */}
           </Route>
+          {/* Admin routes without Layout */}
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Routes>
       </ErrorBoundary>
     </ChakraProvider>

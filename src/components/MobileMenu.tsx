@@ -8,7 +8,7 @@ import {
   Icon,
   useDisclosure
 } from '@chakra-ui/react'
-import { FaBars, FaGamepad, FaTrophy, FaComments } from 'react-icons/fa'
+import { FaBars, FaGamepad, FaTrophy, FaComments, FaHistory } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 
 const MobileMenu = () => {
@@ -69,6 +69,20 @@ const MobileMenu = () => {
           color="white"
         >
           Leaderboard
+        </MenuItem>
+        <MenuItem
+          py={3}
+          bg="rgba(0, 0, 0, 0.2)"
+          _hover={{
+            bg: 'rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 0 15px rgba(236, 201, 75, 0.4)'
+          }}
+          onClick={() => handleNavigation('/changelog')}
+          icon={<Icon as={FaHistory} color="yellow.400" />}
+          fontSize="lg"
+          color="white"
+        >
+          Changelog
         </MenuItem>
         <MenuItem
           py={3}

@@ -464,7 +464,7 @@ export const ZONES: Zone[] = [
   {
     id: 'darna',
     name: 'Darnassus',
-    continent: 'TBC',
+    continent: 'Kalimdor',
     imageFile: 'darnassus.jpg',
     level: '67-70',
     faction: 'Neutral'

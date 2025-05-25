@@ -1,5 +1,6 @@
 import { db } from './firebase'
-import { collection, query, where, getDocs, addDoc, orderBy, limit } from 'firebase/firestore'
+import { collection, query, where, getDocs, addDoc, orderBy, limit, Timestamp, doc, updateDoc, startAfter } from 'firebase/firestore'
+import type { DocumentData } from 'firebase/firestore'
 
 interface LeaderboardEntry {
   playerName: string
@@ -11,11 +12,30 @@ interface LeaderboardEntry {
 }
 
 interface Feedback {
+  id?: string
   message: string
   rating: number
   timestamp: Date
   status: 'new' | 'in-progress' | 'completed'
   response?: string
+  responseDate?: Date | null
+}
+
+interface Changelog {
+  id: string
+  title: string
+  description: string
+  date: Date
+  type: 'feature' | 'bugfix' | 'improvement'
+}
+
+interface Score {
+  playerName: string
+  score: number
+  questionsAnswered: number
+  timeElapsed: number
+  mode: 'easy' | 'hard'
+  timestamp: Date
 }
 
 // Check if a player already exists and compare scores
@@ -157,14 +177,167 @@ export const getLatestFeedback = async (count: number = 50): Promise<Feedback[]>
       const data = doc.data()
       return {
         ...data,
-        timestamp: data.timestamp?.toDate() || new Date(), // Handle potential missing timestamp
-        rating: data.rating || 0, // Handle potential missing rating
-        status: data.status || 'new', // Handle potential missing status
-        message: data.message || '' // Handle potential missing message
+        timestamp: data.timestamp?.toDate() || new Date(),
+        rating: data.rating || 0,
+        status: data.status || 'new',
+        message: data.message || ''
       } as Feedback
     })
   } catch (error) {
     console.error('Error fetching feedback:', error)
     return []
+  }
+}
+
+export const getAdminStats = async () => {
+  try {
+    // Get total players (unique player names from scores)
+    const scoresRef = collection(db, 'scores')
+    const scoresSnapshot = await getDocs(scoresRef)
+    const uniquePlayers = new Set(scoresSnapshot.docs.map(doc => doc.data().playerName))
+
+    // Get feedback stats
+    const feedbackRef = collection(db, 'feedback')
+    const feedbackSnapshot = await getDocs(feedbackRef)
+    const feedbackCount = feedbackSnapshot.docs.length
+    const totalRating = feedbackSnapshot.docs.reduce((sum, doc) => sum + (doc.data().rating || 0), 0)
+    const averageRating = feedbackCount > 0 ? (totalRating / feedbackCount).toFixed(1) : '0.0'
+
+    return {
+      totalPlayers: uniquePlayers.size,
+      feedbackCount,
+      averageRating
+    }
+  } catch (error) {
+    console.error('Error fetching admin stats:', error)
+    return {
+      totalPlayers: 0,
+      feedbackCount: 0,
+      averageRating: '0.0'
+    }
+  }
+}
+
+export const submitChangelog = async (
+  title: string,
+  description: string,
+  type: 'feature' | 'bugfix' | 'improvement'
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const changelogRef = collection(db, 'changelogs')
+    const docRef = await addDoc(changelogRef, {
+      title,
+      description,
+      type,
+      date: new Date()
+    })
+
+    if (!docRef.id) {
+      throw new Error('Failed to create changelog entry')
+    }
+
+    return {
+      success: true,
+      message: 'Changelog entry created successfully!'
+    }
+  } catch (error) {
+    console.error('Error creating changelog:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error creating changelog. Please try again.'
+    }
+  }
+}
+
+export const getChangelogs = async (count: number = 50): Promise<Changelog[]> => {
+  try {
+    const changelogRef = collection(db, 'changelogs')
+    const q = query(
+      changelogRef,
+      orderBy('date', 'desc'),
+      limit(count)
+    )
+    
+    const querySnapshot = await getDocs(q)
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        title: data.title || '',
+        description: data.description || '',
+        date: data.date?.toDate() || new Date(),
+        type: data.type || 'improvement'
+      } as Changelog
+    })
+  } catch (error) {
+    console.error('Error fetching changelogs:', error)
+    return []
+  }
+}
+
+export const respondToFeedback = async (
+  feedbackId: string,
+  response: string,
+  status: 'new' | 'in-progress' | 'completed'
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const feedbackRef = collection(db, 'feedback')
+    const docRef = doc(feedbackRef, feedbackId)
+    
+    await updateDoc(docRef, {
+      response,
+      status,
+      responseDate: new Date()
+    })
+
+    return {
+      success: true,
+      message: 'Response added successfully!'
+    }
+  } catch (error) {
+    console.error('Error adding response:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error adding response. Please try again.'
+    }
+  }
+}
+
+export const getPaginatedFeedback = async (
+  page: number = 1,
+  perPage: number = 5
+): Promise<{ feedback: Feedback[]; total: number }> => {
+  try {
+    const feedbackRef = collection(db, 'feedback')
+    
+    // Get total count
+    const snapshot = await getDocs(feedbackRef)
+    const total = snapshot.size
+
+    // Get paginated data
+    const q = query(
+      feedbackRef,
+      orderBy('timestamp', 'desc'),
+      limit(perPage * page) // Get all documents up to the current page
+    )
+    
+    const querySnapshot = await getDocs(q)
+    const allDocs = querySnapshot.docs
+
+    // Get the last perPage documents
+    const startIndex = (page - 1) * perPage
+    const paginatedDocs = allDocs.slice(startIndex, startIndex + perPage)
+    
+    const feedback = paginatedDocs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: doc.data().timestamp?.toDate() || new Date(),
+      responseDate: doc.data().responseDate?.toDate() || null
+    })) as Feedback[]
+
+    return { feedback, total }
+  } catch (error) {
+    console.error('Error fetching paginated feedback:', error)
+    return { feedback: [], total: 0 }
   }
 }

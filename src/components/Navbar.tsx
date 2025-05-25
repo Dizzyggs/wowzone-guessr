@@ -1,6 +1,6 @@
 import { Box, Flex, Heading, Button, Container, Icon } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
-import { FaGamepad, FaTrophy, FaDragon, FaComments } from 'react-icons/fa'
+import { FaGamepad, FaTrophy, FaDragon, FaComments, FaHistory } from 'react-icons/fa'
 import MobileMenu from './MobileMenu'
 
 const Navbar = () => {
@@ -68,6 +68,20 @@ const Navbar = () => {
               transition="all 0.2s"
             >
               Leaderboard
+            </Button>
+            <Button
+              as={RouterLink}
+              to="/changelog"
+              leftIcon={<Icon as={FaHistory} />}
+              variant="ghost"
+              color="white"
+              _hover={{
+                bg: "whiteAlpha.200",
+                transform: "translateY(-2px)"
+              }}
+              transition="all 0.2s"
+            >
+              Changelog
             </Button>
             <Button
               as={RouterLink}

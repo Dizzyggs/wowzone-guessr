@@ -81,7 +81,8 @@ export const HowToPlayGuide = ({ isOpen, onClose }: HowToPlayGuideProps) => {
                     <Box as={FaHeart} color="red.400" boxSize={5} mr={3} />
                     <Box>
                       <Text fontWeight="bold">Lives System</Text>
-                      <Text fontSize="sm">Start with 2 lives. Each wrong answer costs 1 life.</Text>
+                      <Text fontSize="sm"><strong style={{textDecoration: 'underline'}}>Manual mode:</strong> Start with 2 lives. Each wrong answer costs 1 life.</Text>
+                      <Text fontSize="sm"><strong style={{textDecoration: 'underline'}}>Multiple choice mode:</strong> 1 life only per question.</Text>
                     </Box>
                   </Flex>
                 </ListItem>
