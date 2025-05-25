@@ -52,7 +52,7 @@ const ZoomWarning = ({ isPlaying = false }: ZoomWarningProps) => {
           <AlertTitle color="yellow.400" mb={2}>
             Browser Zoom Detected
           </AlertTitle>
-          <VStack align="start" spacing={2}>
+          <VStack align="start" spacing={2} mb={2}>
             <AlertDescription color="white">
               {isPlaying ? (
                 <Text>
