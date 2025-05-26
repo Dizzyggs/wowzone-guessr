@@ -14,7 +14,6 @@ import {
   Th,
   Td,
   Button,
-  Skeleton,
   ButtonGroup,
   Center,
   Spinner,
@@ -22,11 +21,20 @@ import {
   IconButton,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { FaTrophy, FaMedal, FaGamepad, FaChevronLeft, FaChevronRight, FaAngleDoubleLeft, FaAngleDoubleRight } from 'react-icons/fa'
+import { FaTrophy, FaGamepad, FaChevronLeft, FaChevronRight, FaAngleDoubleLeft, FaAngleDoubleRight, FaMedal } from 'react-icons/fa'
 import { getTopScores } from '../firebaseFunctions'
 
 const MotionBox = motion(Box)
-const MotionTr = motion(Tr)
+// const MotionTr = motion(Tr)
+
+// Add custom scrollbar styles
+const scrollbarStyles = {
+  '&::-webkit-scrollbar': {
+    display: 'none',
+  },
+  'msOverflowStyle': 'none',  // IE and Edge
+  'scrollbarWidth': 'none',  // Firefox
+}
 
 interface LeaderboardEntry {
   playerName: string
@@ -213,33 +221,69 @@ const Leaderboard = () => {
             <Text color="gray.400" fontSize="lg">No scores recorded yet.</Text>
           ) : (
             <>
-              <TableContainer width="100%" overflowY="auto" maxH="600px">
+              <TableContainer 
+                width="100%" 
+                overflowY="auto" 
+                maxH="600px"
+                sx={scrollbarStyles}
+              >
                 <Table variant="simple">
                   <Thead position="sticky" top={0} bg="gray.900" zIndex={1}>
                     <Tr>
-                      <Th color="gray.400" width="10%">#</Th>
+                      <Th color="gray.400" textAlign="center">Rank</Th>
                       <Th color="gray.400">Player</Th>
                       <Th color="gray.400" isNumeric>Score</Th>
-                      <Th color="gray.400" isNumeric>Time</Th>
-                      <Th color="gray.400" isNumeric>Date</Th>
+                      <Th color="gray.400" isNumeric display={{ base: 'none', md: 'table-cell' }}>Questions</Th>
+                      <Th color="gray.400" isNumeric display={{ base: 'none', md: 'table-cell' }}>Time</Th>
+                      <Th color="gray.400" display={{ base: 'none', md: 'table-cell' }}>Date</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {getCurrentPageScores().map((score, index) => (
-                      <Tr
-                        key={index}
-                        _hover={{ bg: 'whiteAlpha.100' }}
-                        transition="background 0.2s"
-                      >
-                        <Td color={index === 0 ? 'yellow.400' : index === 1 ? 'gray.400' : index === 2 ? 'orange.400' : 'white'}>
-                          {(currentPage - 1) * itemsPerPage + index + 1}
-                        </Td>
-                        <Td>{score.playerName}</Td>
-                        <Td isNumeric>{score.score}</Td>
-                        <Td isNumeric>{formatTime(score.timeElapsed)}</Td>
-                        <Td isNumeric color="whiteAlpha.800">{formatDate(score.timestamp)}</Td>
-                      </Tr>
-                    ))}
+                    {getCurrentPageScores().map((entry, index) => {
+                      const absoluteIndex = (currentPage - 1) * itemsPerPage + index;
+                      const medalColor = getMedalColor(absoluteIndex);
+                      
+                      return (
+                        <Tr 
+                          key={`${entry.playerName}-${index}`}
+                          bg={absoluteIndex % 2 === 0 ? 'whiteAlpha.50' : 'transparent'}
+                          transition="all 0.2s"
+                          _hover={{
+                            bg: 'whiteAlpha.100',
+                            transform: 'translateX(4px)'
+                          }}
+                        >
+                          <Td textAlign="center" position="relative">
+                            {absoluteIndex <= 2 ? (
+                              <Icon 
+                                as={FaMedal} 
+                                w={6} 
+                                h={6} 
+                                color={medalColor}
+                                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
+                              />
+                            ) : (
+                              <Text>{absoluteIndex + 1}</Text>
+                            )}
+                          </Td>
+                          <Td fontWeight={absoluteIndex <= 2 ? "bold" : "normal"} color={absoluteIndex <= 2 ? "blue.300" : "white"}>
+                            {entry.playerName}
+                          </Td>
+                          <Td isNumeric fontWeight="bold" color={absoluteIndex <= 2 ? "blue.300" : "white"}>
+                            {entry.score}
+                          </Td>
+                          <Td isNumeric display={{ base: 'none', md: 'table-cell' }}>
+                            {entry.questionsAnswered}
+                          </Td>
+                          <Td isNumeric display={{ base: 'none', md: 'table-cell' }}>
+                            {formatTime(entry.timeElapsed)}
+                          </Td>
+                          <Td display={{ base: 'none', md: 'table-cell' }}>
+                            {formatDate(entry.timestamp)}
+                          </Td>
+                        </Tr>
+                      );
+                    })}
                   </Tbody>
                 </Table>
               </TableContainer>

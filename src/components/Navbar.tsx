@@ -33,7 +33,7 @@ const Navbar = () => {
             gap={2}
           >
             <Icon as={FaDragon} w={{ base: 6, md: 8 }} h={{ base: 6, md: 8 }} color="blue.400" />
-            WoW ZoneGuesser
+            WoW ZoneGuessr
           </Heading>
           
           {/* Desktop Navigation */}
