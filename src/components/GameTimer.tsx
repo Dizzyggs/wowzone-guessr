@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Box, Text, HStack, Icon } from '@chakra-ui/react'
+import { Box, Text, Icon } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
 import { FaClock } from 'react-icons/fa'
 

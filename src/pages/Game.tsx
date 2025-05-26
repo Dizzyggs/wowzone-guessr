@@ -353,7 +353,7 @@ const Game = () => {
               <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                 {gameState.options.map((option, index) => (
                   <MotionButton
-                    key={option.id}
+                    key={option.id ? option.id : index}
                     onClick={() => handleGuess(option.name)}
                     isDisabled={gameState.inputDisabled}
                     colorScheme="blue"
