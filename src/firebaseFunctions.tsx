@@ -193,10 +193,10 @@ export const getLatestFeedback = async (count: number = 50): Promise<Feedback[]>
 
 export const getAdminStats = async () => {
   try {
-    // Get total players (unique player names from scores)
-    const scoresRef = collection(db, 'scores')
-    const scoresSnapshot = await getDocs(scoresRef)
-    const uniquePlayers = new Set(scoresSnapshot.docs.map(doc => doc.data().playerName))
+    // Get total players (unique player names from leaderboard)
+    const leaderboardRef = collection(db, 'leaderboard')
+    const leaderboardSnapshot = await getDocs(leaderboardRef)
+    const uniquePlayers = new Set(leaderboardSnapshot.docs.map(doc => doc.data().playerName))
 
     // Get feedback stats
     const feedbackRef = collection(db, 'feedback')

@@ -9,9 +9,6 @@ import {
   Input,
   Text,
   VStack,
-  // useBreakpointValue,
-  HStack,
-  SimpleGrid,
   Icon,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -30,7 +27,6 @@ import './Game.scss'
 const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 const MotionImage = motion(Image)
-// const MotionSuggestionBox = motion(Box)
 
 interface GameState {
   score: number
