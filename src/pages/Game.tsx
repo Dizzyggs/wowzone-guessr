@@ -28,6 +28,25 @@ const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 const MotionImage = motion(Image)
 
+// Add a styled container for the buttons
+const MotionButtonContainer = motion(Box)
+
+// Add animation variants for the button container
+const buttonContainerVariants = {
+  initial: {
+    opacity: 0.5,
+    y: 0,
+  },
+  hover: {
+    opacity: 1,
+    y: -8,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut"
+    }
+  }
+}
+
 interface GameState {
   score: number
   lives: number
@@ -264,341 +283,125 @@ const Game = () => {
   };
 
   return (
-    <Container maxW="container.xl" py={8} mt="5rem">
-      <ZoomWarning isPlaying={true} />
-      <VStack spacing={4} h="full">
-        <Box
-          position="relative"
-          w="full"
-          maxW="1200px"
-          mx="auto"
-        >
-          {/* Score */}
+    <Container maxW="container.xl" py={4} position="relative">
+      <VStack spacing={4} align="stretch">
+        {/* Score and Lives */}
+        <Flex justify="space-between" align="center">
+          <ScoreCounter value={gameState.score} />
+          <Box bg="rgba(25, 4, 4, 0.7)" px={4} py={2} borderRadius="lg">
+            <Text color="red.300">Lives Left {Array(gameState.lives).fill('❤️').join(' ')}</Text>
+          </Box>
+          <GameTimer 
+            isRunning={gameState.isReady && !gameState.showResults} 
+            onTimeUpdate={(time) => setGameState(prev => ({ ...prev, gameTime: time }))}
+          />
+        </Flex>
+
+        {/* Game Area */}
+        <Box position="relative" width="100%" paddingTop="56.25%" borderRadius="xl" overflow="hidden">
+          <MotionImage
+            key={gameState.imageKey}
+            src={gameState.currentImage}
+            position="absolute"
+            top={0}
+            left={0}
+            width="100%"
+            height="100%"
+            objectFit="cover"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          />
+          
+          {/* Skip button */}
           <Box
             position="absolute"
-            left="0"
-            top="-8"
+            bottom={4}
+            right={4}
+            zIndex={1}
           >
-            <ScoreCounter value={gameState.score} />
+            <Button
+              leftIcon={<Icon as={FaForward} />}
+              onClick={handleSkip}
+              variant="solid"
+              colorScheme="blue"
+              size="sm"
+              opacity={0.6}
+              _hover={{ opacity: 1 }}
+              transition="opacity 0.2s"
+            >
+              Skip
+            </Button>
           </Box>
 
-          {/* Lives */}
-          {!isMultipleChoice && (
-            <Box
+          {/* Multiple Choice Options Container */}
+          {isMultipleChoice && (
+            <MotionButtonContainer
               position="absolute"
-              left="50%"
-              top="-5"
-              transform="translateX(-50%)"
-              bg="rgba(10, 15, 28, 0.95)"
-              px={4}
-              py={1}
-              borderRadius="md"
-              border="2px solid"
-              borderColor="red.400"
-              zIndex={5}
-              width={"10rem"}
-              display={"flex"}
-              flexDir={"row"}
-              alignItems={"center"}
-              justifyContent={"space-between"}
+              bottom={0}
+              left={0}
+              right={0}
+              bg="rgba(0, 0, 0, 0.5)"
+              backdropFilter="blur(8px)"
+              p={4}
+              variants={buttonContainerVariants}
+              initial="initial"
+              whileHover="hover"
+              animate="initial"
             >
-              <Text fontSize="sm" color="gray.400" textAlign="center">
-                Lives Left
-              </Text>
-              <Flex justify="center" gap={2}>
-                {Array.from({ length: gameState.lives }).map((_, i) => (
-                  <Text key={i} fontSize="lg">❤️</Text>
+              <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                {gameState.options.map((option, index) => (
+                  <MotionButton
+                    key={option.id}
+                    onClick={() => handleGuess(option.name)}
+                    isDisabled={gameState.inputDisabled}
+                    colorScheme="blue"
+                    size="lg"
+                    variant="outline"
+                    whileHover={{
+                      scale: 1.02,
+                      y: -2,
+                      transition: { duration: 0.2 }
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {option.name}
+                  </MotionButton>
                 ))}
-              </Flex>
-            </Box>
+              </Grid>
+            </MotionButtonContainer>
           )}
+        </Box>
 
-          {/* Progress Counter and Timer */}
-          <Flex
-            position="absolute"
-            right="0"
-            top="-10"
-            gap={4}
-            align="center"
-            zIndex={5}
-          >
-            <Text
-              fontSize="md"
-              color="green.400"
-            >
-              {gameState.usedZones.size} / {availableZones.length}
-            </Text>
-            <GameTimer 
-              isRunning={gameState.isReady && !gameState.isAnswering && !gameState.showResults} 
-              onTimeUpdate={(time) => setGameState(prev => ({ ...prev, gameTime: time }))}
-            />
-          </Flex>
-
-          {/* Main Image Container with Progress Bar */}
-          <Box
-            position="relative"
-            borderRadius="xl"
-            overflow="visible"
-            boxShadow="2xl"
-            w="full"
-            sx={{
-              aspectRatio: '16/9',
-            }}
-          >
-            {/* Progress Bar */}
-            <Box
-              position="absolute"
-              top="0"
-              left="0"
-              right="0"
-              h="3px"
-              bg="whiteAlpha.200"
-              zIndex={2}
-            >
-              <Box
-                h="full"
-                bg="green.400"
-                transition="width 0.3s ease"
-                w={`${(gameState.questionsAnswered / availableZones.length) * 100}%`}
-              />
-            </Box>
-
-            {showNotification && (
-              <GameNotification
-                message={notificationText}
-                type={notificationType}
-                isVisible={showNotification}
-                containerStyle={{
-                  position: 'absolute',
-                  top: '50px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  zIndex: 100
-                }}
-              />
-            )}
-
-            {/* Ambient light container */}
-            <Box
-              position="absolute"
-              top="-100%"
-              left="-100%"
-              right="-100%"
-              bottom="-100%"
-              zIndex={-1}
-              style={{
-                background: gameState.currentImage ? `url(${gameState.currentImage})` : 'none',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                filter: 'blur(120px) brightness(0.6) saturate(120%)',
-                opacity: 0.3,
-                transform: 'scale(2)',
-                mixBlendMode: 'soft-light',
+        {/* Manual Input Mode */}
+        {!isMultipleChoice && (
+          <Box position="relative" mt={4}>
+            <Input
+              value={input}
+              onChange={handleInputChange}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !gameState.inputDisabled) {
+                  handleGuess(input)
+                  setSuggestions([])
+                }
               }}
+              placeholder="Type zone name..."
+              size="lg"
+              bg="rgba(13, 16, 33, 0.7)"
+              color="white"
+              border="2px solid"
+              borderColor="whiteAlpha.300"
+              _hover={{ borderColor: "blue.400" }}
+              _focus={{ borderColor: "blue.400", boxShadow: "0 0 0 1px #4299E1" }}
+              isDisabled={gameState.inputDisabled}
+              transition="all 0.2s ease"
+              spellCheck="false"
+              autoComplete="off"
             />
 
-            {/* Main image */}
-            <Box
-              position="relative"
-              borderRadius="xl"
-              overflow="hidden"
-              boxShadow="dark-lg"
-              h="full"
-              bg="rgba(0, 0, 0, 0.2)"
-            >
-              <AnimatePresence mode="wait">
-                <MotionImage
-                  key={gameState.imageKey}
-                  src={gameState.currentImage}
-                  alt="Zone Image"
-                  objectFit="contain"
-                  objectPosition="center"
-                  w="full"
-                  h="full"
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.5 }}
-                  sx={{
-                    maxHeight: '100%',
-                    maxWidth: '100%',
-                  }}
-                />
-              </AnimatePresence>
-            </Box>
-          </Box>
-        </Box>
-
-        {/* Add Skip button to the right side */}
-        <Box position="relative" w="full" maxW="1200px">
-          <Button
-            position="absolute"
-            right="0"
-            top="-55"
-            onClick={handleSkip}
-            isDisabled={gameState.inputDisabled}
-            leftIcon={<Icon as={FaForward} />}
-            colorScheme="gray"
-            variant="solid"
-            size="md"
-            bg="rgba(10, 15, 28, 0.8)"
-            border="1px solid"
-            borderColor="whiteAlpha.200"
-            color="whiteAlpha.800"
-            _hover={{ 
-              bg: 'rgba(20, 25, 38, 0.9)',
-              borderColor: 'whiteAlpha.300',
-              transform: 'translateY(-1px)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
-            }}
-            _active={{
-              transform: 'translateY(0)',
-              boxShadow: 'none'
-            }}
-            _focus={{
-              outline: 'none',
-              boxShadow: 'none'
-            }}
-            transition="all 0.2s"
-          >
-            Skip
-          </Button>
-        </Box>
-
-        {isMultipleChoice ? (
-          <Grid 
-            templateColumns={{ 
-              base: "1fr", 
-              md: "repeat(2, 1fr)" 
-            }}
-            gap={4}
-            w="full"
-            maxW="900px"
-            px={{ base: 2, sm: 4 }}
-          >
-            {gameState.options.map((option, index) => (
-              <MotionButton
-                key={option.id ? option.id : index}
-                size="lg"
-                height={{ base: "60px", sm: "70px" }}
-                fontSize={{ base: "md", sm: "xl" }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleGuess(option.name)}
-                isDisabled={gameState.inputDisabled}
-                colorScheme={
-                  gameState.isAnswering
-                    ? gameState.correctAnswer === option.name
-                      ? "green"
-                      : "red"
-                    : "purple"
-                }
-                variant={gameState.isAnswering && gameState.correctAnswer === option.name ? "solid" : "outline"}
-                opacity={gameState.isAnswering && gameState.correctAnswer !== option.name ? 0.7 : 1}
-                bg="rgba(10, 15, 28, 0.95)"
-                border="1px solid"
-                borderColor={gameState.isAnswering
-                  ? gameState.correctAnswer === option.name
-                    ? "green.400"
-                    : "red.400"
-                  : "purple.500"
-                }
-                color="white"
-                _hover={{
-                  bg: "rgba(20, 25, 38, 0.95)",
-                  borderColor: gameState.isAnswering
-                    ? gameState.correctAnswer === option.name
-                      ? "green.300"
-                      : "red.300"
-                    : "purple.400",
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)"
-                }}
-                _active={{
-                  transform: "translateY(0)",
-                  boxShadow: "none"
-                }}
-                _focus={{
-                  outline: "none",
-                  boxShadow: "none"
-                }}
-                sx={{
-                  backdropFilter: "blur(12px)",
-                  transition: "all 0.2s ease",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)"
-                }}
-              >
-                {option.name}
-              </MotionButton>
-            ))}
-          </Grid>
-        ) : (
-          <Box 
-            position="relative" 
-            w="full" 
-            maxW="600px" 
-            mx="auto"
-            px={{ base: 4, sm: 0 }}
-          >
-            <MotionBox
-              initial={false}
-              animate={gameState.isAnswering ? {
-                x: [-10, 10, -10, 10, -5, 5, -2, 2, 0],
-                transition: { duration: 0.5 }
-              } : {}}
-            >
-              <Input
-                placeholder="Type the zone name..."
-                size="lg"
-                height={{ base: "45px", sm: "50px" }}
-                fontSize={{ base: "md", sm: "lg" }}
-                textAlign="center"
-                bg="rgba(10, 15, 28, 0.95)"
-                border="1px solid"
-                borderRadius="2xl"
-                borderColor={
-                  gameState.isAnswering 
-                    ? (gameState.lives > 1 ? "orange.400" : "red.400")
-                    : "purple.500"
-                }
-                value={input}
-                onChange={handleInputChange}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !gameState.inputDisabled) {
-                    handleGuess(input)
-                    setSuggestions([])
-                  }
-                }}
-                isDisabled={gameState.inputDisabled}
-                color="white"
-                _placeholder={{ color: "whiteAlpha.500" }}
-                sx={{
-                  backdropFilter: 'blur(12px)',
-                  boxShadow: '0 4px 12px rgba(159, 122, 234, 0.15)',
-                  transition: 'all 0.2s ease',
-                  '&:focus': {
-                    borderColor: 'purple.400',
-                    boxShadow: '0 4px 16px rgba(159, 122, 234, 0.25)',
-                    transform: 'translateY(-1px)',
-                  },
-                  '&:hover:not(:disabled)': {
-                    borderColor: 'purple.400',
-                    boxShadow: '0 4px 16px rgba(159, 122, 234, 0.2)',
-                    transform: 'translateY(-1px)',
-                  },
-                  '&:disabled': {
-                    opacity: 0.7,
-                    cursor: 'not-allowed',
-                    _hover: {
-                      borderColor: gameState.lives > 1 ? "orange.400" : "red.400"
-                    }
-                  }
-                }}
-                spellCheck="false"
-                autoComplete="off"
-              />
-
-              {/* Suggestions Box */}
+            {/* Suggestions Box */}
+            <AnimatePresence>
               {suggestions.length > 0 && !gameState.inputDisabled && (
                 <MotionBox
                   position="absolute"
@@ -606,78 +409,82 @@ const Game = () => {
                   left={0}
                   right={0}
                   mt={2}
-                  bg="rgba(10, 15, 28, 0.95)"
+                  bg="rgba(13, 16, 33, 0.95)"
                   borderRadius="xl"
                   border="1px solid"
-                  borderColor="purple.500"
+                  borderColor="blue.500"
                   zIndex={10}
-                  maxH={{ base: "180px", sm: "220px" }}
+                  maxH="200px"
                   overflowY="auto"
-                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                  transition={{
-                    duration: 0.2,
-                    ease: [0.19, 1.0, 0.22, 1.0]
-                  }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
                   sx={{
                     '&::-webkit-scrollbar': {
-                      display: 'none',
+                      display: 'none'
                     },
-                    '-ms-overflow-style': 'none',
+                    'msOverflowStyle': 'none',
                     'scrollbarWidth': 'none',
-                    backdropFilter: 'blur(12px)',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    'backdropFilter': 'blur(12px)'
                   }}
                 >
                   {suggestions.map((suggestion, index) => (
                     <MotionBox
                       key={index}
-                      px={3}
-                      py={1.5}
+                      px={4}
+                      py={2}
                       cursor="pointer"
                       _hover={{ bg: "whiteAlpha.100" }}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      fontSize={{ base: "sm", sm: "md" }}
-                      color="white"
-                      initial={{ opacity: 0, scale: 0.7, x: -20 }}
-                      animate={{ opacity: 1, scale: 1, x: 0 }}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
                       transition={{
-                        duration: 0.3,
-                        delay: index * 0.05,
-                        ease: [0.34, 1.56, 0.64, 1],
+                        duration: 0.2,
+                        delay: index * 0.03,
+                        ease: [0.25, 0.1, 0.25, 1]
                       }}
                       whileHover={{
                         x: 5,
                         transition: { duration: 0.1 }
                       }}
-                      whileTap={{ scale: 0.98 }}
                     >
-                      {suggestion}
+                      <Text color="white" fontSize="md">
+                        {suggestion}
+                      </Text>
                     </MotionBox>
                   ))}
                 </MotionBox>
               )}
-            </MotionBox>
+            </AnimatePresence>
           </Box>
         )}
-
-        <ReadyModal
-          isOpen={!gameState.isReady}
-          onClose={() => navigate('/play')}
-          onStart={handleGameStart}
-        />
-
-        <ResultsModal
-          isOpen={gameState.showResults}
-          onClose={() => navigate('/play')}
-          questionsAnswered={gameState.usedZones.size - gameState.skippedZones.size}
-          score={gameState.score}
-          timeElapsed={gameState.gameTime}
-          mode={mode as 'easy' | 'hard'}
-          skippedQuestions={gameState.skippedZones.size}
-        />
       </VStack>
+
+      {/* Notifications and Modals */}
+      <GameNotification
+        message={notificationText}
+        type={notificationType}
+        isVisible={showNotification}
+      />
+      
+      <ReadyModal
+        isOpen={!gameState.isReady}
+        onClose={() => navigate('/play')}
+        onStart={handleGameStart}
+      />
+
+      <ResultsModal
+        isOpen={gameState.showResults}
+        onClose={() => navigate('/play')}
+        score={gameState.score}
+        questionsAnswered={gameState.questionsAnswered}
+        timeElapsed={gameState.gameTime}
+        mode={isMultipleChoice ? 'easy' : 'hard'}
+        skippedQuestions={gameState.skippedZones.size}
+      />
+
+      <ZoomWarning isPlaying={true} />
     </Container>
   )
 }

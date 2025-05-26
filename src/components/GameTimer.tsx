@@ -43,41 +43,34 @@ const GameTimer = ({ isRunning, onTimeUpdate }: GameTimerProps) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      bg="rgba(10, 15, 28, 0.95)"
+      bg="rgba(13, 16, 33, 0.7)"
       borderRadius="lg"
-      px={4}
-      py={2}
-      border="2px solid"
+      px={3}
+      py={1}
+      border="1px solid"
       borderColor="blue.400"
-      boxShadow="0 0 10px rgba(66, 153, 225, 0.3)"
+      boxShadow="0 0 10px rgba(66, 153, 225, 0.15)"
+      display="flex"
+      alignItems="center"
+      gap={2}
     >
-      <HStack spacing={2} align="center">
-        <Icon 
-          as={FaClock} 
-          color="blue.400"
-          w={4}
-          h={4}
-          animation={isRunning ? "pulse 2s infinite" : "none"}
-        />
-        <Text
-          fontSize="xl"
-          fontFamily="mono"
-          fontWeight="bold"
-          color="white"
-          letterSpacing="wider"
-        >
-          {formatTime(time)}
-        </Text>
-      </HStack>
-      <style>
-        {`
-          @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-          }
-        `}
-      </style>
+      <Icon 
+        as={FaClock} 
+        color="blue.400"
+        w={3}
+        h={3}
+        opacity={isRunning ? 1 : 0.7}
+      />
+      <Text
+        fontSize="md"
+        fontFamily="mono"
+        fontWeight="bold"
+        color="white"
+        letterSpacing="wider"
+        opacity={0.9}
+      >
+        {formatTime(time)}
+      </Text>
     </MotionBox>
   )
 }
