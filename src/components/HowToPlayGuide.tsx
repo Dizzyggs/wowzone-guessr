@@ -55,7 +55,7 @@ export const HowToPlayGuide = ({ isOpen, onClose }: HowToPlayGuideProps) => {
                     <Text fontWeight="bold" color="blue.300">
                       <Flex as="span" align="center">
                         <FaKeyboard />
-                        <Box ml={2}>Manual Mode</Box>
+                        <Box ml={2}>Input Mode</Box>
                       </Flex>
                     </Text>
                     <Text fontSize="sm">
@@ -81,8 +81,8 @@ export const HowToPlayGuide = ({ isOpen, onClose }: HowToPlayGuideProps) => {
                     <Box as={FaHeart} color="red.400" boxSize={5} mr={3} />
                     <Box>
                       <Text fontWeight="bold">Lives System</Text>
-                      <Text fontSize="sm"><strong style={{textDecoration: 'underline'}}>Manual mode:</strong> Start with 2 lives. Each wrong answer costs 1 life.</Text>
-                      <Text fontSize="sm"><strong style={{textDecoration: 'underline'}}>Multiple choice mode:</strong> 1 life only per question.</Text>
+                      <Text fontSize="sm">✍️<strong style={{textDecoration: 'underline'}}>Input mode:</strong> Start with 2 lives. Each wrong answer costs 1 life.</Text>
+                      <Text fontSize="sm">❓<strong style={{textDecoration: 'underline'}}>Multiple choice mode:</strong> 1 life only per question.</Text>
                     </Box>
                   </Flex>
                 </ListItem>
@@ -100,8 +100,8 @@ export const HowToPlayGuide = ({ isOpen, onClose }: HowToPlayGuideProps) => {
                     <Box as={FaTrophy} color="yellow.500" boxSize={5} mr={3} />
                     <Box>
                       <Text fontWeight="bold">Scoring System</Text>
-                      <Text fontSize="sm">• Multiple Choice Mode: 100 points per correct answer</Text>
-                      <Text fontSize="sm">• Manual Mode: 200 points per correct answer</Text>
+                      <Text fontSize="sm">• ✍️<strong style={{textDecoration: 'underline'}}>Input Mode:</strong> 200 points per correct answer</Text>
+                      <Text fontSize="sm">• ❓<strong style={{textDecoration: 'underline'}}>Multiple Choice Mode:</strong> 100 points per correct answer</Text>
                       <Text fontSize="sm">• Time bonus based on completion speed</Text>
                       <Text fontSize="sm">• Compete for high scores on the leaderboard!</Text>
                     </Box>
@@ -132,7 +132,7 @@ export const HowToPlayGuide = ({ isOpen, onClose }: HowToPlayGuideProps) => {
               <UnorderedList spacing={2}>
                 <ListItem>Look for distinctive landmarks and architecture</ListItem>
                 <ListItem>Pay attention to the zone's environment and color palette</ListItem>
-                <ListItem>In manual mode, type and see zones matching your search!</ListItem>
+                <ListItem>In input mode, type and see zones matching your search!</ListItem>
                 <ListItem>Try to memorize unique features of each zone</ListItem>
               </UnorderedList>
             </Box>

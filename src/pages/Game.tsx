@@ -10,6 +10,9 @@ import {
   Text,
   VStack,
   // useBreakpointValue,
+  HStack,
+  SimpleGrid,
+  Icon,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -21,6 +24,7 @@ import GameTimer from '../components/GameTimer'
 import ResultsModal from '../components/ResultsModal'
 import ReadyModal from '../components/ReadyModal'
 import ZoomWarning from '../components/ZoomWarning'
+import { FaForward } from 'react-icons/fa'
 import './Game.scss'
 
 const MotionBox = motion(Box)
@@ -34,6 +38,7 @@ interface GameState {
   currentZone: Zone | null
   currentImage: string
   usedZones: Set<string>
+  skippedZones: Set<string>
   isMultipleChoice: boolean
   options: Zone[]
   imageKey: number
@@ -59,6 +64,7 @@ const Game = () => {
     currentZone: null,
     currentImage: '',
     usedZones: new Set(),
+    skippedZones: new Set(),
     isMultipleChoice,
     options: [],
     imageKey: 0,
@@ -73,7 +79,7 @@ const Game = () => {
 
   const [showNotification, setShowNotification] = useState(false)
   const [notificationText, setNotificationText] = useState('')
-  const [notificationType, setNotificationType] = useState<'success' | 'error'>('success')
+  const [notificationType, setNotificationType] = useState<'success' | 'error' | 'info'>('success')
   const [input, setInput] = useState('')
   const [suggestions, setSuggestions] = useState<string[]>([])
 
@@ -139,7 +145,7 @@ const Game = () => {
     preloadImages(remainingZones)
   }
 
-  const showGameNotification = (text: string, type: 'success' | 'error') => {
+  const showGameNotification = (text: string, type: 'success' | 'error' | 'info') => {
     setNotificationText(text)
     setNotificationType(type)
     setShowNotification(true)
@@ -246,6 +252,21 @@ const Game = () => {
     getNextZone()
   }
 
+  const handleSkip = () => {
+    if (!gameState.currentZone) return;
+    
+    setGameState(prev => ({
+      ...prev,
+      skippedZones: new Set([...prev.skippedZones, prev.currentZone!.name])
+    }));
+
+    // Show notification
+    showGameNotification('Question skipped', 'info');
+
+    // Load next question
+    getNextZone();
+  };
+
   return (
     <Container maxW="container.xl" py={8} mt="5rem">
       <ZoomWarning isPlaying={true} />
@@ -309,7 +330,7 @@ const Game = () => {
               fontSize="md"
               color="green.400"
             >
-              {gameState.questionsAnswered} / {availableZones.length}
+              {gameState.usedZones.size} / {availableZones.length}
             </Text>
             <GameTimer 
               isRunning={gameState.isReady && !gameState.isAnswering && !gameState.showResults} 
@@ -412,6 +433,42 @@ const Game = () => {
           </Box>
         </Box>
 
+        {/* Add Skip button to the right side */}
+        <Box position="relative" w="full" maxW="1200px">
+          <Button
+            position="absolute"
+            right="0"
+            top="-55"
+            onClick={handleSkip}
+            isDisabled={gameState.inputDisabled}
+            leftIcon={<Icon as={FaForward} />}
+            colorScheme="gray"
+            variant="solid"
+            size="md"
+            bg="rgba(10, 15, 28, 0.8)"
+            border="1px solid"
+            borderColor="whiteAlpha.200"
+            color="whiteAlpha.800"
+            _hover={{ 
+              bg: 'rgba(20, 25, 38, 0.9)',
+              borderColor: 'whiteAlpha.300',
+              transform: 'translateY(-1px)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)'
+            }}
+            _active={{
+              transform: 'translateY(0)',
+              boxShadow: 'none'
+            }}
+            _focus={{
+              outline: 'none',
+              boxShadow: 'none'
+            }}
+            transition="all 0.2s"
+          >
+            Skip
+          </Button>
+        </Box>
+
         {isMultipleChoice ? (
           <Grid 
             templateColumns={{ 
@@ -442,6 +499,38 @@ const Game = () => {
                 }
                 variant={gameState.isAnswering && gameState.correctAnswer === option.name ? "solid" : "outline"}
                 opacity={gameState.isAnswering && gameState.correctAnswer !== option.name ? 0.7 : 1}
+                bg="rgba(10, 15, 28, 0.95)"
+                border="1px solid"
+                borderColor={gameState.isAnswering
+                  ? gameState.correctAnswer === option.name
+                    ? "green.400"
+                    : "red.400"
+                  : "purple.500"
+                }
+                color="white"
+                _hover={{
+                  bg: "rgba(20, 25, 38, 0.95)",
+                  borderColor: gameState.isAnswering
+                    ? gameState.correctAnswer === option.name
+                      ? "green.300"
+                      : "red.300"
+                    : "purple.400",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)"
+                }}
+                _active={{
+                  transform: "translateY(0)",
+                  boxShadow: "none"
+                }}
+                _focus={{
+                  outline: "none",
+                  boxShadow: "none"
+                }}
+                sx={{
+                  backdropFilter: "blur(12px)",
+                  transition: "all 0.2s ease",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)"
+                }}
               >
                 {option.name}
               </MotionButton>
@@ -586,10 +675,11 @@ const Game = () => {
         <ResultsModal
           isOpen={gameState.showResults}
           onClose={() => navigate('/play')}
-          questionsAnswered={gameState.usedZones.size}
+          questionsAnswered={gameState.usedZones.size - gameState.skippedZones.size}
           score={gameState.score}
           timeElapsed={gameState.gameTime}
           mode={mode as 'easy' | 'hard'}
+          skippedQuestions={gameState.skippedZones.size}
         />
       </VStack>
     </Container>

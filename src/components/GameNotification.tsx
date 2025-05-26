@@ -5,7 +5,7 @@ interface GameNotificationProps {
   message: string
   points?: number
   isVisible: boolean
-  type?: 'success' | 'error'
+  type: 'success' | 'error' | 'info'
   containerStyle?: React.CSSProperties
 }
 
@@ -18,6 +18,13 @@ const GameNotification: React.FC<GameNotificationProps> = ({ message, points, is
           text: '#FF4444',
           border: '1px solid rgba(255, 68, 68, 0.3)',
           shadow: '0 0 10px rgba(255, 68, 68, 0.15)'
+        }
+      case 'info':
+        return {
+          bg: 'rgba(0, 0, 255, 0.95)',
+          text: '#00FF66',
+          border: '1px solid rgba(0, 255, 102, 0.3)',
+          shadow: '0 0 15px rgba(0, 255, 102, 0.2)'
         }
       default:
         return {

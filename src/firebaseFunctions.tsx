@@ -8,7 +8,8 @@ import {
   orderBy,
   limit,
   doc,
-  updateDoc
+  updateDoc,
+  increment
 } from 'firebase/firestore'
 
 interface LeaderboardEntry {
@@ -38,6 +39,7 @@ interface Changelog {
   removed?: string
   date: Date
   type: 'feature' | 'bugfix' | 'improvement'
+  likes?: number
 }
 
 // Check if a player already exists and compare scores
@@ -90,7 +92,7 @@ export const checkAndStoreScore = async (entry: Omit<LeaderboardEntry, 'timestam
   }
 }
 
-// Get top 10 scores for a specific mode
+// Get all scores for a specific mode
 export const getTopScores = async (mode: 'easy' | 'hard'): Promise<LeaderboardEntry[]> => {
   try {
     const leaderboardRef = collection(db, 'leaderboard')
@@ -100,16 +102,14 @@ export const getTopScores = async (mode: 'easy' | 'hard'): Promise<LeaderboardEn
     const scores = querySnapshot.docs.map(doc => doc.data() as LeaderboardEntry)
     
     // Sort by score (descending) and use time as tiebreaker
-    return scores
-      .sort((a, b) => {
-        if (b.score !== a.score) {
-          return b.score - a.score // First sort by score (descending)
-        }
-        return a.timeElapsed - b.timeElapsed // Then by time (ascending)
-      })
-      .slice(0, 10)
+    return scores.sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score // First sort by score (descending)
+      }
+      return a.timeElapsed - b.timeElapsed // Then by time (ascending)
+    })
   } catch (error) {
-    console.error('Error fetching top scores:', error)
+    console.error('Error fetching scores:', error)
     return []
   }
 }
@@ -291,7 +291,8 @@ export const getChangelogs = async (count: number = 50): Promise<Changelog[]> =>
         changed: data.changed || '',
         removed: data.removed || '',
         date: data.date?.toDate() || new Date(),
-        type: data.type || 'improvement'
+        type: data.type || 'improvement',
+        likes: data.likes || 0
       } as Changelog
     })
   } catch (error) {
@@ -364,5 +365,17 @@ export const getPaginatedFeedback = async (
   } catch (error) {
     console.error('Error fetching paginated feedback:', error)
     return { feedback: [], total: 0 }
+  }
+}
+
+export const updateChangelogLikes = async (changelogId: string, shouldIncrement: boolean): Promise<void> => {
+  try {
+    const changelogRef = doc(db, 'changelogs', changelogId)
+    await updateDoc(changelogRef, {
+      likes: shouldIncrement ? increment(1) : increment(-1)
+    })
+  } catch (error) {
+    console.error('Error updating changelog likes:', error)
+    throw error
   }
 }

@@ -9,11 +9,14 @@ import {
   useDisclosure,
   Flex,
   Spinner,
-  Center
+  Center,
+  IconButton,
+  useToast
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { getChangelogs } from '../firebaseFunctions'
+import { getChangelogs, updateChangelogLikes } from '../firebaseFunctions'
 import ChangelogDetailModal from '../components/ChangelogDetailModal'
+import { FaThumbsUp } from 'react-icons/fa'
 
 const MotionBox = motion(Box)
 
@@ -25,6 +28,7 @@ interface Changelog {
   changed?: string
   removed?: string
   date: Date
+  likes?: number
 }
 
 const Changelog = () => {
@@ -32,6 +36,15 @@ const Changelog = () => {
   const [selectedChangelog, setSelectedChangelog] = useState<Changelog | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const toast = useToast()
+
+  // Get liked changelogs from localStorage
+  const getLikedChangelogs = (): Set<string> => {
+    const liked = localStorage.getItem('likedChangelogs')
+    return liked ? new Set<string>(JSON.parse(liked)) : new Set<string>()
+  }
+
+  const [likedChangelogs, setLikedChangelogs] = useState<Set<string>>(getLikedChangelogs())
 
   useEffect(() => {
     const loadChangelogs = async () => {
@@ -47,6 +60,49 @@ const Changelog = () => {
   const handleChangelogClick = (changelog: Changelog) => {
     setSelectedChangelog(changelog)
     onOpen()
+  }
+
+  const handleLike = async (e: React.MouseEvent, changelogId: string) => {
+    e.stopPropagation() // Prevent opening the modal when clicking the like button
+    
+    if (!changelogId) return
+
+    try {
+      const isLiked = likedChangelogs.has(changelogId)
+      const newLikedChangelogs = new Set(likedChangelogs)
+      
+      if (isLiked) {
+        newLikedChangelogs.delete(changelogId)
+      } else {
+        newLikedChangelogs.add(changelogId)
+      }
+
+      // Update localStorage
+      localStorage.setItem('likedChangelogs', JSON.stringify([...newLikedChangelogs]))
+      setLikedChangelogs(newLikedChangelogs)
+
+      // Update Firestore
+      await updateChangelogLikes(changelogId, !isLiked)
+
+      // Update local state
+      setChangelogs(prev => prev.map(log => {
+        if (log.id === changelogId) {
+          return {
+            ...log,
+            likes: (log.likes || 0) + (isLiked ? -1 : 1)
+          }
+        }
+        return log
+      }))
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update like status',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      })
+    }
   }
 
   const getTypeColor = (type: string) => {
@@ -101,6 +157,21 @@ const Changelog = () => {
                   {changelog.title}
                 </Heading>
                 <Flex align="center" gap={4}>
+                  <IconButton
+                    aria-label="Like changelog"
+                    icon={<FaThumbsUp />}
+                    size="sm"
+                    colorScheme={likedChangelogs.has(changelog.id!) ? 'blue' : 'gray'}
+                    variant={likedChangelogs.has(changelog.id!) ? 'solid' : 'outline'}
+                    onClick={(e) => handleLike(e, changelog.id!)}
+                    _hover={{
+                      transform: 'scale(1.1)',
+                    }}
+                    transition="all 0.2s"
+                  />
+                  <Text color="gray.400" fontSize="sm">
+                    {changelog.likes || 0}
+                  </Text>
                   <Badge colorScheme={getTypeColor(changelog.type)} fontSize="0.8em">
                     {changelog.type.toUpperCase()}
                   </Badge>

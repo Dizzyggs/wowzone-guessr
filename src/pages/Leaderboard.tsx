@@ -15,9 +15,14 @@ import {
   Td,
   Button,
   Skeleton,
+  ButtonGroup,
+  Center,
+  Spinner,
+  TableContainer,
+  IconButton,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { FaTrophy, FaMedal, FaGamepad } from 'react-icons/fa'
+import { FaTrophy, FaMedal, FaGamepad, FaChevronLeft, FaChevronRight, FaAngleDoubleLeft, FaAngleDoubleRight } from 'react-icons/fa'
 import { getTopScores } from '../firebaseFunctions'
 
 const MotionBox = motion(Box)
@@ -29,30 +34,81 @@ interface LeaderboardEntry {
   questionsAnswered: number
   timeElapsed: number
   mode: 'easy' | 'hard'
-  timestamp: Date
+  timestamp: any // Firestore timestamp
 }
+
+const getPageNumbers = (currentPage: number, totalPages: number) => {
+  const delta = 2; // Number of pages to show before and after current page
+  const range = [];
+  const rangeWithDots = [];
+
+  // Always show first page
+  range.push(1);
+
+  for (let i = currentPage - delta; i <= currentPage + delta; i++) {
+    if (i > 1 && i < totalPages) {
+      range.push(i);
+    }
+  }
+
+  // Always show last page
+  if (totalPages > 1) {
+    range.push(totalPages);
+  }
+
+  // Add the page numbers with dots
+  let l;
+  for (let i of range) {
+    if (l) {
+      if (i - l === 2) {
+        rangeWithDots.push(l + 1);
+      } else if (i - l !== 1) {
+        rangeWithDots.push('...');
+      }
+    }
+    rangeWithDots.push(i);
+    l = i;
+  }
+
+  return rangeWithDots;
+};
 
 const Leaderboard = () => {
   const [selectedMode, setSelectedMode] = useState<'easy' | 'hard'>('easy')
   const [scores, setScores] = useState<LeaderboardEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const itemsPerPage = 10
 
   useEffect(() => {
-    fetchScores()
+    const loadScores = async () => {
+      setIsLoading(true)
+      try {
+        const scoresData = await getTopScores(selectedMode)
+        setScores(scoresData)
+        setTotalPages(Math.ceil(scoresData.length / itemsPerPage))
+        setCurrentPage(1) // Reset to first page when mode changes
+      } catch (error) {
+        console.error('Error loading scores:', error)
+      }
+      setIsLoading(false)
+    }
+
+    loadScores()
   }, [selectedMode])
 
-  const fetchScores = async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const fetchedScores = await getTopScores(selectedMode)
-      setScores(fetchedScores)
-    } catch (err) {
-      setError('Failed to load leaderboard data')
-      console.error('Error fetching scores:', err)
-    }
-    setIsLoading(false)
+  // Get current page's scores
+  const getCurrentPageScores = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return scores.slice(startIndex, endIndex)
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage)
+    // Scroll to top of the list smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const formatTime = (seconds: number): string => {
@@ -60,6 +116,26 @@ const Leaderboard = () => {
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
+
+  const formatDate = (timestamp: any): string => {
+    if (!timestamp) return '-';
+    
+    try {
+      // Handle Firestore timestamp
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      
+      return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '-';
+    }
+  };
 
   const getMedalColor = (index: number): string => {
     switch (index) {
@@ -129,85 +205,112 @@ const Leaderboard = () => {
           boxShadow="xl"
           overflow={{ base: "auto", md: "hidden" }}
         >
-          {error ? (
-            <Text color="red.400" textAlign="center" fontSize="lg">
-              {error}
-            </Text>
+          {isLoading ? (
+            <Center py={8}>
+              <Spinner size="xl" color="blue.400" thickness="4px" />
+            </Center>
+          ) : scores.length === 0 ? (
+            <Text color="gray.400" fontSize="lg">No scores recorded yet.</Text>
           ) : (
-            <Table variant="unstyled" size={{ base: "sm", md: "md" }}>
-              <Thead>
-                <Tr>
-                  <Th color="gray.400" textAlign="center" px={{ base: 2, md: 6 }}>Rank</Th>
-                  <Th color="gray.400" px={{ base: 2, md: 6 }}>Player</Th>
-                  <Th color="gray.400" isNumeric px={{ base: 2, md: 6 }}>Score</Th>
-                  <Th color="gray.400" isNumeric display={{ base: "none", md: "table-cell" }}>Questions</Th>
-                  <Th color="gray.400" isNumeric textAlign="right" display={{ base: "none", md: "table-cell" }}>Time</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {isLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <Tr key={i}>
-                      <Td px={{ base: 2, md: 6 }}><Skeleton height="20px" /></Td>
-                      <Td px={{ base: 2, md: 6 }}><Skeleton height="20px" /></Td>
-                      <Td px={{ base: 2, md: 6 }}><Skeleton height="20px" /></Td>
-                      <Td display={{ base: "none", md: "table-cell" }}><Skeleton height="20px" /></Td>
-                      <Td display={{ base: "none", md: "table-cell" }}><Skeleton height="20px" /></Td>
+            <>
+              <TableContainer width="100%" overflowY="auto" maxH="600px">
+                <Table variant="simple">
+                  <Thead position="sticky" top={0} bg="gray.900" zIndex={1}>
+                    <Tr>
+                      <Th color="gray.400" width="10%">#</Th>
+                      <Th color="gray.400">Player</Th>
+                      <Th color="gray.400" isNumeric>Score</Th>
+                      <Th color="gray.400" isNumeric>Time</Th>
+                      <Th color="gray.400" isNumeric>Date</Th>
                     </Tr>
-                  ))
-                ) : scores.length === 0 ? (
-                  <Tr>
-                    <Td colSpan={5} textAlign="center" color="gray.400">
-                      No scores yet. Be the first to play!
-                    </Td>
-                  </Tr>
-                ) : (
-                  scores.map((entry, index) => (
-                    <MotionTr
-                      key={`${entry.playerName}-${entry.timestamp}`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      bg={index % 2 === 0 ? 'rgba(66, 153, 225, 0.1)' : 'transparent'}
-                      _hover={{ bg: 'rgba(66, 153, 225, 0.2)' }}
-                    >
-                      <Td textAlign="center" position="relative" px={{ base: 2, md: 6 }}>
-                        {index <= 2 ? (
-                          <Icon
-                            as={FaMedal}
-                            w={{ base: 5, md: 6 }}
-                            h={{ base: 5, md: 6 }}
-                            color={getMedalColor(index)}
-                          />
-                        ) : (
-                          <Text color="gray.400">{index + 1}</Text>
-                        )}
-                      </Td>
-                      <Td px={{ base: 2, md: 6 }}>
-                        <Text color="white" fontWeight="bold" fontSize={{ base: "sm", md: "md" }}>
-                          {entry.playerName}
-                        </Text>
-                      </Td>
-                      <Td isNumeric px={{ base: 2, md: 6 }}>
-                        <Text color="yellow.400" fontWeight="bold" fontSize={{ base: "sm", md: "md" }}>
-                          {entry.score}
-                        </Text>
-                      </Td>
-                      <Td isNumeric display={{ base: "none", md: "table-cell" }}>
-                        <Text color="green.400">
-                          {entry.questionsAnswered}
-                        </Text>
-                      </Td>
-                      <Td isNumeric textAlign="right" display={{ base: "none", md: "table-cell" }}>
-                        <Text color="blue.400">
-                          {formatTime(entry.timeElapsed)}
-                        </Text>
-                      </Td>
-                    </MotionTr>
-                  ))
-                )}
-              </Tbody>
-            </Table>
+                  </Thead>
+                  <Tbody>
+                    {getCurrentPageScores().map((score, index) => (
+                      <Tr
+                        key={index}
+                        _hover={{ bg: 'whiteAlpha.100' }}
+                        transition="background 0.2s"
+                      >
+                        <Td color={index === 0 ? 'yellow.400' : index === 1 ? 'gray.400' : index === 2 ? 'orange.400' : 'white'}>
+                          {(currentPage - 1) * itemsPerPage + index + 1}
+                        </Td>
+                        <Td>{score.playerName}</Td>
+                        <Td isNumeric>{score.score}</Td>
+                        <Td isNumeric>{formatTime(score.timeElapsed)}</Td>
+                        <Td isNumeric color="whiteAlpha.800">{formatDate(score.timestamp)}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TableContainer>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <HStack spacing={2} justify="center" width="100%" pt={6}>
+                  <ButtonGroup variant="outline" spacing={2} alignItems="center">
+                    <IconButton
+                      aria-label="First page"
+                      icon={<Icon as={FaAngleDoubleLeft} />}
+                      onClick={() => handlePageChange(1)}
+                      isDisabled={currentPage === 1}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                      _hover={{ bg: 'whiteAlpha.200' }}
+                    />
+                    <IconButton
+                      aria-label="Previous page"
+                      icon={<Icon as={FaChevronLeft} />}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      isDisabled={currentPage === 1}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                      _hover={{ bg: 'whiteAlpha.200' }}
+                    />
+                    
+                    {getPageNumbers(currentPage, totalPages).map((pageNum, index) => (
+                      pageNum === '...' ? (
+                        <Text key={`dots-${index}`} color="gray.500" px={2}>...</Text>
+                      ) : (
+                        <Button
+                          key={pageNum}
+                          onClick={() => handlePageChange(Number(pageNum))}
+                          variant={currentPage === pageNum ? 'solid' : 'ghost'}
+                          colorScheme="blue"
+                          size="sm"
+                          minW="32px"
+                          _hover={{ bg: 'whiteAlpha.200' }}
+                        >
+                          {pageNum}
+                        </Button>
+                      )
+                    ))}
+
+                    <IconButton
+                      aria-label="Next page"
+                      icon={<Icon as={FaChevronRight} />}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      isDisabled={currentPage === totalPages}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                      _hover={{ bg: 'whiteAlpha.200' }}
+                    />
+                    <IconButton
+                      aria-label="Last page"
+                      icon={<Icon as={FaAngleDoubleRight} />}
+                      onClick={() => handlePageChange(totalPages)}
+                      isDisabled={currentPage === totalPages}
+                      size="sm"
+                      colorScheme="blue"
+                      variant="ghost"
+                      _hover={{ bg: 'whiteAlpha.200' }}
+                    />
+                  </ButtonGroup>
+                </HStack>
+              )}
+            </>
           )}
         </Box>
       </VStack>

@@ -16,7 +16,7 @@ import {
   keyframes,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { FaTrophy, FaClock, FaCheck, FaUser, FaRocket } from 'react-icons/fa'
+import { FaTrophy, FaClock, FaCheck, FaUser, FaRocket, FaForward } from 'react-icons/fa'
 import { checkAndStoreScore } from '../firebaseFunctions'
 import GameNotification from './GameNotification'
 import { calculateTimeBonus } from '../utils/scoring'
@@ -36,9 +36,10 @@ interface ResultsModalProps {
   score: number
   timeElapsed: number
   mode: 'easy' | 'hard'
+  skippedQuestions: number
 }
 
-const ResultsModal = ({ isOpen, onClose, questionsAnswered, score, timeElapsed, mode }: ResultsModalProps) => {
+const ResultsModal = ({ isOpen, onClose, questionsAnswered, score, timeElapsed, mode, skippedQuestions }: ResultsModalProps) => {
   const [playerName, setPlayerName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hasSubmitted, setHasSubmitted] = useState(false)
@@ -155,9 +156,17 @@ const ResultsModal = ({ isOpen, onClose, questionsAnswered, score, timeElapsed, 
             <HStack justify="space-between" p={4} bg="rgba(66, 153, 225, 0.1)" borderRadius="lg">
               <HStack>
                 <Icon as={FaCheck} color="green.400" w={6} h={6} />
-                <Text color="white" fontSize="lg">Questions</Text>
+                <Text color="white" fontSize="lg">Questions Answered</Text>
               </HStack>
               <Text color="white" fontSize="xl" fontWeight="bold">{questionsAnswered}</Text>
+            </HStack>
+
+            <HStack justify="space-between" p={4} bg="rgba(66, 153, 225, 0.1)" borderRadius="lg">
+              <HStack>
+                <Icon as={FaForward} color="gray.400" w={6} h={6} />
+                <Text color="white" fontSize="lg">Questions Skipped</Text>
+              </HStack>
+              <Text color="gray.400" fontSize="xl" fontWeight="bold">{skippedQuestions}</Text>
             </HStack>
 
             <HStack justify="space-between" p={4} bg="rgba(66, 153, 225, 0.1)" borderRadius="lg">
