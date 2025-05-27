@@ -272,7 +272,8 @@ const Game = () => {
     
     setGameState(prev => ({
       ...prev,
-      skippedZones: new Set([...prev.skippedZones, prev.currentZone!.name])
+      skippedZones: new Set([...prev.skippedZones, prev.currentZone!.name]),
+      questionsAnswered: prev.questionsAnswered + 1
     }));
 
     // Show notification
@@ -291,10 +292,15 @@ const Game = () => {
           <Box bg="rgba(25, 4, 4, 0.7)" px={4} py={2} borderRadius="lg">
             <Text color="red.300">Lives Left {Array(gameState.lives).fill('❤️').join(' ')}</Text>
           </Box>
-          <GameTimer 
-            isRunning={gameState.isReady && !gameState.showResults} 
-            onTimeUpdate={(time) => setGameState(prev => ({ ...prev, gameTime: time }))}
-          />
+          <Flex gap={2} align="center">
+            <Box bg="rgba(13, 16, 33, 0.7)" px={2} py={1} borderRadius="lg">
+              <Text color="blue.300" fontSize="sm">{gameState.questionsAnswered}/{availableZones.length}</Text>
+            </Box>
+            <GameTimer 
+              isRunning={gameState.isReady && !gameState.showResults} 
+              onTimeUpdate={(time) => setGameState(prev => ({ ...prev, gameTime: time }))}
+            />
+          </Flex>
         </Flex>
 
         {/* Game Area */}

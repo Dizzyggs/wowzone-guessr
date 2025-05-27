@@ -23,11 +23,28 @@ import {
   Flex,
   IconButton,
   Spinner,
-  Center
+  Center,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Switch,
+  FormControl,
+  FormLabel
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
-import { getAdminStats, getPaginatedFeedback, submitChangelog, respondToFeedback } from '../firebaseFunctions'
-import { FaChevronLeft, FaChevronRight, FaReply } from 'react-icons/fa'
+import { 
+  getAdminStats, 
+  getPaginatedFeedback, 
+  submitChangelog, 
+  submitChangelogDraft,
+  getDraftChangelogs,
+  publishChangelog,
+  respondToFeedback,
+  updateDraftChangelog
+} from '../firebaseFunctions'
+import { FaChevronLeft, FaChevronRight, FaReply, FaEdit, FaTrash } from 'react-icons/fa'
 import Layout from '../components/Layout'
 
 interface AdminStats {
@@ -44,6 +61,18 @@ interface Feedback {
   status: 'new' | 'in-progress' | 'completed'
   response?: string
   responseDate?: Date | null
+}
+
+interface Changelog {
+  id?: string
+  title: string
+  type: 'feature' | 'bugfix' | 'improvement'
+  added?: string
+  changed?: string
+  removed?: string
+  date: Date
+  likes?: number
+  isDraft?: boolean
 }
 
 export default function AdminDashboard() {
@@ -77,6 +106,13 @@ export default function AdminDashboard() {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null)
   const [response, setResponse] = useState('')
   const [status, setStatus] = useState<'new' | 'in-progress' | 'completed'>('in-progress')
+
+  const [draftChangelogs, setDraftChangelogs] = useState<Changelog[]>([])
+  const [isDraft, setIsDraft] = useState(false)
+  const [isLoadingDrafts, setIsLoadingDrafts] = useState(false)
+
+  // Add state for editing drafts
+  const [editingDraft, setEditingDraft] = useState<Changelog | null>(null)
 
   useEffect(() => {
     const checkAuth = () => {
@@ -114,6 +150,42 @@ export default function AdminDashboard() {
     loadData()
   }, [navigate, currentPage])
 
+  useEffect(() => {
+    if (sessionStorage.getItem('isAdminAuthenticated')) {
+      loadDrafts()
+    }
+  }, [])
+
+  const loadDrafts = async () => {
+    setIsLoadingDrafts(true)
+    try {
+      const drafts = await getDraftChangelogs()
+      setDraftChangelogs(drafts)
+    } catch (error) {
+      console.error('Error loading drafts:', error)
+      toast({
+        title: 'Error loading drafts',
+        status: 'error',
+        duration: 3000,
+      })
+    } finally {
+      setIsLoadingDrafts(false)
+    }
+  }
+
+  const handleEditDraft = (draft: Changelog) => {
+    setEditingDraft(draft)
+    setChangelogData({
+      title: draft.title,
+      type: draft.type,
+      added: draft.added || '',
+      changed: draft.changed || '',
+      removed: draft.removed || ''
+    })
+    setIsDraft(true)
+    onChangelogOpen()
+  }
+
   const handleSubmitChangelog = async () => {
     if (!changelogData.title || (!changelogData.added && !changelogData.changed && !changelogData.removed)) {
       toast({
@@ -126,15 +198,33 @@ export default function AdminDashboard() {
     }
 
     setIsSubmitting(true)
-    const result = await submitChangelog(
-      changelogData.title,
-      changelogData.type,
-      {
-        added: changelogData.added || undefined,
-        changed: changelogData.changed || undefined,
-        removed: changelogData.removed || undefined
-      }
-    )
+    let result
+
+    if (editingDraft) {
+      // Update existing draft
+      result = await updateDraftChangelog(
+        editingDraft.id!,
+        {
+          title: changelogData.title,
+          type: changelogData.type,
+          added: changelogData.added || undefined,
+          changed: changelogData.changed || undefined,
+          removed: changelogData.removed || undefined
+        }
+      )
+    } else {
+      // Create new changelog/draft
+      const submitFunction = isDraft ? submitChangelogDraft : submitChangelog
+      result = await submitFunction(
+        changelogData.title,
+        changelogData.type,
+        {
+          added: changelogData.added || undefined,
+          changed: changelogData.changed || undefined,
+          removed: changelogData.removed || undefined
+        }
+      )
+    }
 
     toast({
       title: result.success ? 'Success' : 'Error',
@@ -145,7 +235,30 @@ export default function AdminDashboard() {
 
     if (result.success) {
       setChangelogData({ title: '', type: 'feature', added: '', changed: '', removed: '' })
+      setEditingDraft(null)
       onChangelogClose()
+      
+      // Refresh drafts list
+      if (isDraft || editingDraft) {
+        await loadDrafts()
+      }
+    }
+    setIsSubmitting(false)
+  }
+
+  const handlePublishDraft = async (changelogId: string) => {
+    setIsSubmitting(true)
+    const result = await publishChangelog(changelogId)
+
+    toast({
+      title: result.success ? 'Success' : 'Error',
+      description: result.message,
+      status: result.success ? 'success' : 'error',
+      duration: 3000,
+    })
+
+    if (result.success) {
+      await loadDrafts()
     }
     setIsSubmitting(false)
   }
@@ -232,235 +345,216 @@ export default function AdminDashboard() {
               </Box>
             </Grid>
 
-            {/* Recent Feedback */}
-            <Box bg="rgba(10, 15, 28, 0.95)" shadow="md" borderRadius="lg" p={6} border="2px solid" borderColor="blue.400">
-              <Heading size="md" mb={4} color="white">Recent Feedback</Heading>
-              <VStack spacing={4} align="stretch">
-                {feedback.length === 0 ? (
-                  <Center py={8}>
-                    <Text color="gray.400">No feedback entries yet.</Text>
-                  </Center>
-                ) : (
-                  feedback.map((item) => (
-                    <Box key={item.id} p={4} bg="whiteAlpha.100" borderRadius="md" borderWidth={1} borderColor="whiteAlpha.200">
-                      <Flex justifyContent="space-between" alignItems="flex-start">
-                        <VStack align="start" spacing={2} flex={1}>
-                          <HStack>
-                            <Badge colorScheme={
-                              item.status === 'completed' ? 'green' :
-                              item.status === 'in-progress' ? 'yellow' : 'red'
-                            }>
-                              {item.status}
-                            </Badge>
-                            <Text color="white">Rating: {item.rating} ⭐</Text>
-                          </HStack>
-                          <Text color="white">{item.message}</Text>
-                          {item.response && (
-                            <Box mt={2} pl={4} borderLeftWidth={2} borderColor="blue.200">
-                              <Text fontSize="sm" color="gray.400">Response ({new Date(item.responseDate!).toLocaleDateString()}):</Text>
-                              <Text color="gray.200">{item.response}</Text>
-                            </Box>
-                          )}
-                        </VStack>
-                        <IconButton
-                          aria-label="Reply to feedback"
-                          icon={<FaReply />}
-                          onClick={() => handleOpenResponse(item)}
-                          ml={4}
-                          colorScheme="blue"
-                          variant="outline"
-                        />
-                      </Flex>
-                    </Box>
-                  ))
-                )}
-              </VStack>
+            <Tabs variant="enclosed" colorScheme="blue" mb={8}>
+              <TabList>
+                <Tab>Feedback</Tab>
+                <Tab>Draft Changelogs</Tab>
+              </TabList>
 
-              {feedback.length > 0 && (
-                <Flex justifyContent="center" mt={4}>
-                  <HStack>
-                    <IconButton
-                      aria-label="Previous page"
-                      icon={<FaChevronLeft />}
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      isDisabled={currentPage === 1}
-                      colorScheme="blue"
-                      variant="outline"
-                    />
-                    <Text color="white">
-                      Page {currentPage} of {totalPages}
-                    </Text>
-                    <IconButton
-                      aria-label="Next page"
-                      icon={<FaChevronRight />}
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      isDisabled={currentPage === totalPages}
-                      colorScheme="blue"
-                      variant="outline"
-                    />
-                  </HStack>
-                </Flex>
-              )}
-            </Box>
+              <TabPanels>
+                <TabPanel p={0} pt={4}>
+                  {/* Recent Feedback */}
+                  <Box bg="rgba(10, 15, 28, 0.95)" shadow="md" borderRadius="lg" p={6} border="2px solid" borderColor="blue.400">
+                    <Heading size="md" mb={4} color="white">Recent Feedback</Heading>
+                    <VStack spacing={4} align="stretch">
+                      {feedback.length === 0 ? (
+                        <Center py={8}>
+                          <Text color="gray.400">No feedback entries yet.</Text>
+                        </Center>
+                      ) : (
+                        feedback.map((item) => (
+                          <Box key={item.id} p={4} bg="whiteAlpha.100" borderRadius="md" borderWidth={1} borderColor="whiteAlpha.200">
+                            <Flex justifyContent="space-between" alignItems="flex-start">
+                              <VStack align="start" spacing={2} flex={1}>
+                                <HStack>
+                                  <Badge colorScheme={
+                                    item.status === 'completed' ? 'green' :
+                                    item.status === 'in-progress' ? 'yellow' : 'red'
+                                  }>
+                                    {item.status}
+                                  </Badge>
+                                  <Text color="white">Rating: {item.rating} ⭐</Text>
+                                </HStack>
+                                <Text color="white">{item.message}</Text>
+                                {item.response && (
+                                  <Box mt={2} pl={4} borderLeftWidth={2} borderColor="blue.200">
+                                    <Text fontSize="sm" color="gray.400">Response ({new Date(item.responseDate!).toLocaleDateString()}):</Text>
+                                    <Text color="gray.200">{item.response}</Text>
+                                  </Box>
+                                )}
+                              </VStack>
+                              <IconButton
+                                aria-label="Reply to feedback"
+                                icon={<FaReply />}
+                                onClick={() => handleOpenResponse(item)}
+                                ml={4}
+                                colorScheme="blue"
+                                variant="outline"
+                              />
+                            </Flex>
+                          </Box>
+                        ))
+                      )}
+                    </VStack>
+
+                    {feedback.length > 0 && (
+                      <Flex justifyContent="center" mt={4}>
+                        <HStack>
+                          <IconButton
+                            aria-label="Previous page"
+                            icon={<FaChevronLeft />}
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            isDisabled={currentPage === 1}
+                            colorScheme="blue"
+                            variant="outline"
+                          />
+                          <Text color="white">
+                            Page {currentPage} of {totalPages}
+                          </Text>
+                          <IconButton
+                            aria-label="Next page"
+                            icon={<FaChevronRight />}
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            isDisabled={currentPage === totalPages}
+                            colorScheme="blue"
+                            variant="outline"
+                          />
+                        </HStack>
+                      </Flex>
+                    )}
+                  </Box>
+                </TabPanel>
+
+                <TabPanel p={0} pt={4}>
+                  {/* Draft Changelogs Section */}
+                  <Box bg="rgba(10, 15, 28, 0.95)" shadow="md" borderRadius="lg" p={6} border="2px solid" borderColor="purple.400">
+                    <Heading size="md" mb={4} color="white">Draft Changelogs</Heading>
+                    <VStack spacing={4} align="stretch">
+                      {isLoadingDrafts ? (
+                        <Center py={8}>
+                          <Spinner />
+                        </Center>
+                      ) : draftChangelogs.length === 0 ? (
+                        <Center py={8}>
+                          <Text color="gray.400">No draft changelogs.</Text>
+                        </Center>
+                      ) : (
+                        draftChangelogs.map((draft) => (
+                          <Box key={draft.id} p={4} bg="whiteAlpha.100" borderRadius="md" borderWidth={1} borderColor="whiteAlpha.200">
+                            <VStack align="stretch" spacing={3}>
+                              <Flex justify="space-between" align="center">
+                                <Heading size="sm" color="white">{draft.title}</Heading>
+                                <HStack>
+                                  <Badge colorScheme={draft.type === 'feature' ? 'green' : draft.type === 'bugfix' ? 'red' : 'blue'}>
+                                    {draft.type}
+                                  </Badge>
+                                  <IconButton
+                                    aria-label="Edit draft"
+                                    icon={<FaEdit />}
+                                    size="sm"
+                                    colorScheme="blue"
+                                    variant="ghost"
+                                    onClick={() => handleEditDraft(draft)}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    colorScheme="green"
+                                    onClick={() => handlePublishDraft(draft.id!)}
+                                    isLoading={isSubmitting}
+                                  >
+                                    Publish
+                                  </Button>
+                                </HStack>
+                              </Flex>
+                              {draft.added && (
+                                <Text color="green.200">Added: {draft.added}</Text>
+                              )}
+                              {draft.changed && (
+                                <Text color="blue.200">Changed: {draft.changed}</Text>
+                              )}
+                              {draft.removed && (
+                                <Text color="red.200">Removed: {draft.removed}</Text>
+                              )}
+                              <Text color="gray.400" fontSize="sm">
+                                Created: {draft.date.toLocaleDateString()}
+                              </Text>
+                            </VStack>
+                          </Box>
+                        ))
+                      )}
+                    </VStack>
+                  </Box>
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
           </>
         )}
 
         {/* Changelog Modal */}
-        <Modal isOpen={isChangelogOpen} onClose={onChangelogClose} size="xl" isCentered>
-          <ModalOverlay backdropFilter="blur(10px)" bg="rgba(0, 0, 0, 0.6)" />
-          <ModalContent
-            bg="rgba(10, 15, 28, 0.95)"
-            border="2px solid"
-            borderColor="blue.400"
-            boxShadow="0 8px 32px rgba(66, 153, 225, 0.4)"
-            mx={4}
-          >
-            <ModalHeader color="white" borderBottom="1px solid" borderColor="whiteAlpha.200">
-              Create New Changelog
-            </ModalHeader>
+        <Modal isOpen={isChangelogOpen} onClose={() => {
+          onChangelogClose()
+          setEditingDraft(null)
+          setChangelogData({ title: '', type: 'feature', added: '', changed: '', removed: '' })
+        }} size="xl">
+          <ModalOverlay />
+          <ModalContent bg="gray.900" color="white">
+            <ModalHeader>{editingDraft ? 'Edit Draft Changelog' : 'New Changelog'}</ModalHeader>
             <ModalBody>
-              <VStack spacing={4} align="stretch">
-                <Box>
-                  <Text color="gray.400" fontSize="sm" mb={2}>Title:</Text>
-                  <Input
-                    placeholder="Enter changelog title"
-                    value={changelogData.title}
-                    onChange={(e) => setChangelogData(prev => ({ ...prev, title: e.target.value }))}
-                    bg="whiteAlpha.100"
-                    border="1px solid"
-                    borderColor="whiteAlpha.300"
-                    color="white"
-                    _hover={{
-                      borderColor: "blue.400"
-                    }}
-                    _focus={{
-                      borderColor: "blue.400",
-                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)"
-                    }}
-                    _placeholder={{
-                      color: "whiteAlpha.400"
-                    }}
-                  />
-                </Box>
-
-                <Box>
-                  <Text color="gray.400" fontSize="sm" mb={2}>Type:</Text>
-                  <Select
-                    value={changelogData.type}
-                    onChange={(e) => setChangelogData(prev => ({ ...prev, type: e.target.value as 'feature' | 'bugfix' | 'improvement' }))}
-                    bg="whiteAlpha.100"
-                    border="1px solid"
-                    borderColor="whiteAlpha.300"
-                    color="white"
-                    _hover={{
-                      borderColor: "blue.400"
-                    }}
-                    _focus={{
-                      borderColor: "blue.400",
-                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)"
-                    }}
-                  >
-                    <option style={{ backgroundColor: "rgb(10, 15, 28)" }} value="feature">Feature</option>
-                    <option style={{ backgroundColor: "rgb(10, 15, 28)" }} value="bugfix">Bug Fix</option>
-                    <option style={{ backgroundColor: "rgb(10, 15, 28)" }} value="improvement">Improvement</option>
-                  </Select>
-                </Box>
-
-                <Box>
-                  <Text color="gray.400" fontSize="sm" mb={2}>Added (optional):</Text>
-                  <Text color="gray.500" fontSize="xs" mb={2}>Use markdown format</Text>
-                  <Textarea
-                    placeholder="- New feature 1&#10;- New feature 2"
-                    value={changelogData.added}
-                    onChange={(e) => setChangelogData(prev => ({ ...prev, added: e.target.value }))}
-                    minH="100px"
-                    bg="whiteAlpha.100"
-                    border="1px solid"
-                    borderColor="whiteAlpha.300"
-                    color="white"
-                    _hover={{
-                      borderColor: "blue.400"
-                    }}
-                    _focus={{
-                      borderColor: "blue.400",
-                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)"
-                    }}
-                    _placeholder={{
-                      color: "whiteAlpha.400"
-                    }}
-                  />
-                </Box>
-
-                <Box>
-                  <Text color="gray.400" fontSize="sm" mb={2}>Changed/Fixed (optional):</Text>
-                  <Text color="gray.500" fontSize="xs" mb={2}>Use markdown format</Text>
-                  <Textarea
-                    placeholder="- Updated feature 1&#10;- Fixed bug 1"
-                    value={changelogData.changed}
-                    onChange={(e) => setChangelogData(prev => ({ ...prev, changed: e.target.value }))}
-                    minH="100px"
-                    bg="whiteAlpha.100"
-                    border="1px solid"
-                    borderColor="whiteAlpha.300"
-                    color="white"
-                    _hover={{
-                      borderColor: "blue.400"
-                    }}
-                    _focus={{
-                      borderColor: "blue.400",
-                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)"
-                    }}
-                    _placeholder={{
-                      color: "whiteAlpha.400"
-                    }}
-                  />
-                </Box>
-
-                <Box>
-                  <Text color="gray.400" fontSize="sm" mb={2}>Removed (optional):</Text>
-                  <Text color="gray.500" fontSize="xs" mb={2}>Use markdown format</Text>
-                  <Textarea
-                    placeholder="- Removed feature 1&#10;- Deprecated feature 2"
-                    value={changelogData.removed}
-                    onChange={(e) => setChangelogData(prev => ({ ...prev, removed: e.target.value }))}
-                    minH="100px"
-                    bg="whiteAlpha.100"
-                    border="1px solid"
-                    borderColor="whiteAlpha.300"
-                    color="white"
-                    _hover={{
-                      borderColor: "blue.400"
-                    }}
-                    _focus={{
-                      borderColor: "blue.400",
-                      boxShadow: "0 0 0 1px var(--chakra-colors-blue-400)"
-                    }}
-                    _placeholder={{
-                      color: "whiteAlpha.400"
-                    }}
-                  />
-                </Box>
+              <VStack spacing={4}>
+                {!editingDraft && (
+                  <FormControl display="flex" alignItems="center" mb={4}>
+                    <FormLabel mb={0}>Save as draft</FormLabel>
+                    <Switch
+                      isChecked={isDraft}
+                      onChange={(e) => setIsDraft(e.target.checked)}
+                      colorScheme="blue"
+                    />
+                  </FormControl>
+                )}
+                <Input
+                  placeholder="Title"
+                  value={changelogData.title}
+                  onChange={(e) => setChangelogData(prev => ({ ...prev, title: e.target.value }))}
+                />
+                <Select
+                  value={changelogData.type}
+                  onChange={(e) => setChangelogData(prev => ({ ...prev, type: e.target.value as 'feature' | 'bugfix' | 'improvement' }))}
+                >
+                  <option value="feature">Feature</option>
+                  <option value="bugfix">Bug Fix</option>
+                  <option value="improvement">Improvement</option>
+                </Select>
+                <Textarea
+                  placeholder="Added (optional)"
+                  value={changelogData.added}
+                  onChange={(e) => setChangelogData(prev => ({ ...prev, added: e.target.value }))}
+                />
+                <Textarea
+                  placeholder="Changed/Fixed (optional)"
+                  value={changelogData.changed}
+                  onChange={(e) => setChangelogData(prev => ({ ...prev, changed: e.target.value }))}
+                />
+                <Textarea
+                  placeholder="Removed (optional)"
+                  value={changelogData.removed}
+                  onChange={(e) => setChangelogData(prev => ({ ...prev, removed: e.target.value }))}
+                />
               </VStack>
             </ModalBody>
-            <ModalFooter borderTop="1px solid" borderColor="whiteAlpha.200">
-              <Button
-                variant="ghost"
-                mr={3}
-                onClick={onChangelogClose}
-                color="white"
-                _hover={{
-                  bg: "whiteAlpha.200"
-                }}
-              >
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={() => {
+                onChangelogClose()
+                setEditingDraft(null)
+                setChangelogData({ title: '', type: 'feature', added: '', changed: '', removed: '' })
+              }}>
                 Cancel
               </Button>
               <Button
                 colorScheme="blue"
                 onClick={handleSubmitChangelog}
                 isLoading={isSubmitting}
-                loadingText="Creating..."
               >
-                Create Changelog
+                {editingDraft ? 'Update Draft' : isDraft ? 'Save Draft' : 'Publish'}
               </Button>
             </ModalFooter>
           </ModalContent>

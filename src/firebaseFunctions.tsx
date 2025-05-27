@@ -40,6 +40,7 @@ interface Changelog {
   date: Date
   type: 'feature' | 'bugfix' | 'improvement'
   likes?: number
+  isDraft?: boolean
 }
 
 // Check if a player already exists and compare scores
@@ -238,7 +239,9 @@ export const submitChangelog = async (
     const docData: any = {
       title,
       type,
-      date: new Date()
+      date: new Date(),
+      isDraft: false, // Explicitly set isDraft to false for published changelogs
+      likes: 0 // Initialize likes counter
     }
 
     // Only add sections that have content
@@ -282,19 +285,22 @@ export const getChangelogs = async (count: number = 50): Promise<Changelog[]> =>
     )
     
     const querySnapshot = await getDocs(q)
-    return querySnapshot.docs.map(doc => {
-      const data = doc.data()
-      return {
-        id: doc.id,
-        title: data.title || '',
-        added: data.added || '',
-        changed: data.changed || '',
-        removed: data.removed || '',
-        date: data.date?.toDate() || new Date(),
-        type: data.type || 'improvement',
-        likes: data.likes || 0
-      } as Changelog
-    })
+    return querySnapshot.docs
+      .map(doc => {
+        const data = doc.data()
+        return {
+          id: doc.id,
+          title: data.title || '',
+          added: data.added || '',
+          changed: data.changed || '',
+          removed: data.removed || '',
+          date: data.date?.toDate() || new Date(),
+          type: data.type || 'improvement',
+          likes: data.likes || 0,
+          isDraft: data.isDraft || false
+        } as Changelog
+      })
+      .filter(changelog => !changelog.isDraft) // Filter out drafts in memory
   } catch (error) {
     console.error('Error fetching changelogs:', error)
     return []
@@ -377,5 +383,137 @@ export const updateChangelogLikes = async (changelogId: string, shouldIncrement:
   } catch (error) {
     console.error('Error updating changelog likes:', error)
     throw error
+  }
+}
+
+export const submitChangelogDraft = async (
+  title: string,
+  type: 'feature' | 'bugfix' | 'improvement',
+  sections: {
+    added?: string
+    changed?: string
+    removed?: string
+  }
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const docData: any = {
+      title,
+      type,
+      date: new Date(),
+      isDraft: true
+    }
+
+    if (sections.added?.trim()) {
+      docData.added = sections.added.trim()
+    }
+    if (sections.changed?.trim()) {
+      docData.changed = sections.changed.trim()
+    }
+    if (sections.removed?.trim()) {
+      docData.removed = sections.removed.trim()
+    }
+
+    const changelogRef = collection(db, 'changelogs')
+    await addDoc(changelogRef, docData)
+
+    return {
+      success: true,
+      message: 'Changelog draft saved successfully!'
+    }
+  } catch (error) {
+    console.error('Error saving changelog draft:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error saving draft. Please try again.'
+    }
+  }
+}
+
+export const getDraftChangelogs = async (): Promise<Changelog[]> => {
+  try {
+    const changelogRef = collection(db, 'changelogs')
+    const q = query(
+      changelogRef,
+      orderBy('date', 'desc')
+    )
+    
+    const querySnapshot = await getDocs(q)
+    const allChangelogs = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      date: doc.data().date?.toDate() || new Date()
+    })) as Changelog[]
+    
+    return allChangelogs.filter(changelog => changelog.isDraft === true)
+  } catch (error) {
+    console.error('Error fetching draft changelogs:', error)
+    return []
+  }
+}
+
+export const publishChangelog = async (changelogId: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const changelogRef = doc(db, 'changelogs', changelogId)
+    await updateDoc(changelogRef, {
+      isDraft: false,
+      date: new Date() // Update the date to publication time
+    })
+
+    return {
+      success: true,
+      message: 'Changelog published successfully!'
+    }
+  } catch (error) {
+    console.error('Error publishing changelog:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error publishing changelog. Please try again.'
+    }
+  }
+}
+
+export const updateDraftChangelog = async (
+  changelogId: string,
+  data: {
+    title: string,
+    type: 'feature' | 'bugfix' | 'improvement',
+    added?: string,
+    changed?: string,
+    removed?: string
+  }
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const changelogRef = doc(db, 'changelogs', changelogId)
+    
+    // Create update object with only defined fields
+    const updateData: any = {
+      title: data.title,
+      type: data.type,
+      date: new Date() // Update the modification date
+    }
+
+    // Only add sections that have content
+    if (data.added?.trim()) {
+      updateData.added = data.added.trim()
+    }
+    if (data.changed?.trim()) {
+      updateData.changed = data.changed.trim()
+    }
+    if (data.removed?.trim()) {
+      updateData.removed = data.removed.trim()
+    }
+
+    await updateDoc(changelogRef, updateData)
+
+    return {
+      success: true,
+      message: 'Draft updated successfully!'
+    }
+  } catch (error) {
+    console.error('Error updating draft:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error updating draft. Please try again.'
+    }
   }
 }
