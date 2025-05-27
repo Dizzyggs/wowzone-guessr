@@ -44,7 +44,7 @@ import {
   respondToFeedback,
   updateDraftChangelog
 } from '../firebaseFunctions'
-import { FaChevronLeft, FaChevronRight, FaReply, FaEdit, FaTrash } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaReply, FaEdit } from 'react-icons/fa'
 import Layout from '../components/Layout'
 
 interface AdminStats {
