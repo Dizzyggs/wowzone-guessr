@@ -357,8 +357,8 @@ const Game = () => {
               bottom={0}
               left={0}
               right={0}
-              bg="rgba(0, 0, 0, 0.85)"
-              backdropFilter="blur(8px)"
+              bg="rgba(0, 0, 0, 0.4)"
+              backdropFilter="blur(10px)"
               p={4}
               variants={buttonContainerVariants}
               initial="initial"
@@ -387,13 +387,15 @@ const Game = () => {
                     whiteSpace="normal"
                     height="auto"
                     borderWidth="2px"
-                    bg="rgba(0, 0, 0, 0.3)"
+                    bg="rgba(0, 0, 0, 0.2)"
+                    backdropFilter="blur(4px)"
                     _hover={{
-                      bg: "rgba(66, 153, 225, 0.2)",
-                      transform: "scale(1.02)"
+                      bg: "rgba(66, 153, 225, 0.15)",
+                      transform: "scale(1.02)",
+                      borderColor: "blue.300"
                     }}
                     _active={{
-                      bg: "rgba(66, 153, 225, 0.3)",
+                      bg: "rgba(66, 153, 225, 0.25)",
                       transform: "scale(0.98)"
                     }}
                   >
@@ -403,52 +405,55 @@ const Game = () => {
               </Grid>
             </MotionButtonContainer>
           )}
-        </Box>
 
-        {/* Multiple Choice Options Container - Mobile Only */}
-        {isMultipleChoice && isMobile && (
-          <Box 
-            mt={4}
-            bg="rgba(0, 0, 0, 0.85)"
-            borderRadius="xl"
-            p={3}
-            pb="calc(env(safe-area-inset-bottom) + 12px)"
-          >
-            <Grid 
-              templateColumns="1fr"
-              gap={3}
-              width="100%"
+          {/* Multiple Choice Options Container - Mobile Only */}
+          {isMultipleChoice && isMobile && (
+            <Box 
+              mt={4}
+              bg="rgba(0, 0, 0, 0.4)"
+              backdropFilter="blur(10px)"
+              borderRadius="xl"
+              p={3}
+              pb="calc(env(safe-area-inset-bottom) + 12px)"
             >
-              {gameState.options.map((option, index) => (
-                <MotionButton
-                  key={option.id ? option.id : index}
-                  onClick={() => handleGuess(option.name)}
-                  isDisabled={gameState.inputDisabled}
-                  colorScheme="blue"
-                  size="lg"
-                  variant="outline"
-                  fontSize="lg"
-                  py={6}
-                  width="100%"
-                  whiteSpace="normal"
-                  height="auto"
-                  borderWidth="2px"
-                  bg="rgba(0, 0, 0, 0.3)"
-                  _hover={{
-                    bg: "rgba(66, 153, 225, 0.2)",
-                    transform: "scale(1.02)"
-                  }}
-                  _active={{
-                    bg: "rgba(66, 153, 225, 0.3)",
-                    transform: "scale(0.98)"
-                  }}
-                >
-                  {option.name}
-                </MotionButton>
-              ))}
-            </Grid>
-          </Box>
-        )}
+              <Grid 
+                templateColumns="1fr"
+                gap={3}
+                width="100%"
+              >
+                {gameState.options.map((option, index) => (
+                  <MotionButton
+                    key={option.id ? option.id : index}
+                    onClick={() => handleGuess(option.name)}
+                    isDisabled={gameState.inputDisabled}
+                    colorScheme="blue"
+                    size="lg"
+                    variant="outline"
+                    fontSize="lg"
+                    py={6}
+                    width="100%"
+                    whiteSpace="normal"
+                    height="auto"
+                    borderWidth="2px"
+                    bg="rgba(0, 0, 0, 0.2)"
+                    backdropFilter="blur(4px)"
+                    _hover={{
+                      bg: "rgba(66, 153, 225, 0.15)",
+                      transform: "scale(1.02)",
+                      borderColor: "blue.300"
+                    }}
+                    _active={{
+                      bg: "rgba(66, 153, 225, 0.25)",
+                      transform: "scale(0.98)"
+                    }}
+                  >
+                    {option.name}
+                  </MotionButton>
+                ))}
+              </Grid>
+            </Box>
+          )}
+        </Box>
 
         {/* Manual Input Mode */}
         {!isMultipleChoice && (

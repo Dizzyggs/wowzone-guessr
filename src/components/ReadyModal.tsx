@@ -3,9 +3,7 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
   ModalBody,
-  ModalFooter,
   Button,
   Text,
   Box,
@@ -13,22 +11,30 @@ import {
   Icon,
   keyframes,
   VStack,
+  useToken,
 } from '@chakra-ui/react'
-import { motion } from 'framer-motion'
-import { FaPlay, FaArrowLeft, FaHourglassStart, FaCrosshairs, FaTrophy } from 'react-icons/fa'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FaPlay, FaArrowLeft, FaMapMarkedAlt, FaHourglassStart, FaLightbulb, FaTrophy } from 'react-icons/fa'
 
 const MotionBox = motion(Box)
+const MotionFlex = motion(Flex)
+const MotionText = motion(Text)
 
-const pulseKeyframes = keyframes`
-  0% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.05); opacity: 0.15; }
-  100% { transform: scale(1); opacity: 0.3; }
+const glowKeyframes = keyframes`
+  0% { box-shadow: 0 0 20px rgba(66, 153, 225, 0.4); }
+  50% { box-shadow: 0 0 40px rgba(66, 153, 225, 0.6); }
+  100% { box-shadow: 0 0 20px rgba(66, 153, 225, 0.4); }
 `
 
 const floatKeyframes = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+`
+
+const particleKeyframes = keyframes`
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--translate-x), var(--translate-y)) rotate(360deg); opacity: 0; }
 `
 
 interface ReadyModalProps {
@@ -39,22 +45,48 @@ interface ReadyModalProps {
 
 const ReadyModal = ({ isOpen, onClose, onStart }: ReadyModalProps) => {
   const [isCountingDown, setIsCountingDown] = useState(false)
-  const [countdown, setCountdown] = useState(5)
+  const [countdown, setCountdown] = useState(3)
+  const [blue400] = useToken('colors', ['blue.400'])
 
   useEffect(() => {
     if (isCountingDown && countdown > 0) {
       const timer = setTimeout(() => {
         setCountdown(prev => prev - 1)
       }, 1000)
-
       return () => clearTimeout(timer)
     } else if (isCountingDown && countdown === 0) {
-      onStart()
+      setTimeout(onStart, 500)
     }
   }, [isCountingDown, countdown])
 
   const handleStart = () => {
     setIsCountingDown(true)
+  }
+
+  const generateParticles = (count: number) => {
+    return Array.from({ length: count }).map((_, i) => {
+      const angle = (360 / count) * i
+      const distance = Math.random() * 100 + 50
+      const x = Math.cos((angle * Math.PI) / 180) * distance
+      const y = Math.sin((angle * Math.PI) / 180) * distance
+      return (
+        <Box
+          key={i}
+          position="absolute"
+          top="50%"
+          left="50%"
+          width="4px"
+          height="4px"
+          borderRadius="full"
+          bg="blue.400"
+          sx={{
+            '--translate-x': `${x}px`,
+            '--translate-y': `${y}px`,
+          }}
+          animation={`${particleKeyframes} 1s ease-out forwards`}
+        />
+      )
+    })
   }
 
   return (
@@ -64,198 +96,209 @@ const ReadyModal = ({ isOpen, onClose, onStart }: ReadyModalProps) => {
       isCentered 
       closeOnOverlayClick={false}
       closeOnEsc={false}
-      size="lg"
+      size="xl"
     >
       <ModalOverlay 
-        backdropFilter="blur(8px)"
-        bg="rgba(0, 0, 0, 0.6)"
+        backdropFilter="blur(12px)"
+        bg="rgba(0, 0, 0, 0.7)"
       />
       <ModalContent
-        bg="rgba(13, 19, 35, 0.95)"
-        borderRadius="2xl"
+        bg="rgba(13, 19, 35, 0.97)"
+        borderRadius="3xl"
         border="2px solid"
         borderColor="blue.400"
-        boxShadow="0 0 40px rgba(66, 153, 225, 0.4)"
+        boxShadow={`0 0 40px ${blue400}40`}
         overflow="hidden"
         position="relative"
-        _before={{
-          content: '""',
-          position: "absolute",
-          top: "-50%",
-          left: "-50%",
-          width: "200%",
-          height: "200%",
-          background: "radial-gradient(circle, rgba(66, 153, 225, 0.1) 0%, rgba(66, 153, 225, 0) 70%)",
-          animation: `${pulseKeyframes} 4s ease-in-out infinite`
-        }}
+        py={8}
       >
-        {!isCountingDown ? (
-          <>
-            <ModalHeader
-              textAlign="center"
-              fontSize="3xl"
-              color="white"
-              fontWeight="bold"
-              pt={8}
-              pb={4}
-            >
-              <Flex justify="center" align="center" gap={3}>
-                <Icon 
-                  as={FaCrosshairs} 
-                  color="blue.400"
-                  w={8} 
-                  h={8}
-                  animation={`${floatKeyframes} 2s ease-in-out infinite`}
-                />
-                Ready to Test Your Knowledge?
-              </Flex>
-            </ModalHeader>
+        <AnimatePresence mode="wait">
+          {!isCountingDown ? (
+            <ModalBody key="ready" py={8}>
+              <VStack spacing={8}>
+                <MotionBox
+                  initial={{ y: -20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Icon 
+                    as={FaMapMarkedAlt} 
+                    color="blue.400"
+                    w={20} 
+                    h={20}
+                    animation={`${floatKeyframes} 3s ease-in-out infinite`}
+                  />
+                </MotionBox>
 
-            <ModalBody py={8}>
-              <VStack spacing={6}>
-                <Box textAlign="center">
-                  <Text color="gray.300" fontSize="lg" mb={4}>
-                    Get ready to identify World of Warcraft zones!
-                  </Text>
-                  <Text color="blue.300" fontSize="md">
-                    The timer starts when you begin. Good luck, adventurer!
-                  </Text>
-                </Box>
+                <MotionText
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  fontSize="4xl"
+                  fontWeight="bold"
+                  color="white"
+                  textAlign="center"
+                  bgGradient="linear(to-r, blue.400, purple.400)"
+                  bgClip="text"
+                >
+                  Ready to Test Your Knowledge?
+                </MotionText>
 
-                <Flex gap={6} justify="center" mt={4}>
-                  <Box textAlign="center">
-                    <Icon 
-                      as={FaHourglassStart} 
-                      w={6} 
-                      h={6} 
-                      color="purple.400" 
-                      mb={2}
-                    />
-                    <Text color="gray.400" fontSize="sm">Timer Active</Text>
-                  </Box>
-                  <Box textAlign="center">
-                    <Icon 
-                      as={FaTrophy} 
-                      w={6} 
-                      h={6} 
-                      color="yellow.400" 
-                      mb={2}
-                    />
-                    <Text color="gray.400" fontSize="sm">Score Points</Text>
-                  </Box>
-                </Flex>
+                <MotionFlex
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  gap={8}
+                  justify="center"
+                  wrap="wrap"
+                >
+                  {[
+                    { icon: FaHourglassStart, text: "Beat the Clock", color: "purple.400" },
+                    { icon: FaLightbulb, text: "Test Your Skills", color: "yellow.400" },
+                    { icon: FaTrophy, text: "Score Points", color: "green.400" }
+                  ].map((item, index) => (
+                    <Box
+                      key={index}
+                      textAlign="center"
+                      p={4}
+                      borderRadius="xl"
+                      bg="whiteAlpha.100"
+                      backdropFilter="blur(8px)"
+                      transition="all 0.3s"
+                      _hover={{
+                        transform: "translateY(-2px)",
+                        bg: "whiteAlpha.200"
+                      }}
+                    >
+                      <Icon 
+                        as={item.icon} 
+                        w={8} 
+                        h={8} 
+                        color={item.color} 
+                        mb={3}
+                      />
+                      <Text color="gray.200" fontSize="sm" fontWeight="medium">
+                        {item.text}
+                      </Text>
+                    </Box>
+                  ))}
+                </MotionFlex>
+
+                <MotionFlex
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
+                  direction="column"
+                  gap={4}
+                  w="full"
+                  px={8}
+                  mt={4}
+                >
+                  <Button
+                    leftIcon={<FaPlay />}
+                    colorScheme="blue"
+                    size="lg"
+                    h="60px"
+                    fontSize="xl"
+                    onClick={handleStart}
+                    position="relative"
+                    overflow="hidden"
+                    animation={`${glowKeyframes} 2s infinite`}
+                    _hover={{
+                      transform: 'translateY(-2px)',
+                    }}
+                    _active={{
+                      transform: 'translateY(1px)',
+                    }}
+                  >
+                    Start Game
+                  </Button>
+                  <Button
+                    leftIcon={<FaArrowLeft />}
+                    variant="ghost"
+                    color="white"
+                    onClick={onClose}
+                    _hover={{
+                      bg: 'whiteAlpha.100',
+                    }}
+                  >
+                    Go Back
+                  </Button>
+                </MotionFlex>
               </VStack>
             </ModalBody>
-
-            <ModalFooter
-              flexDirection="column"
-              gap={4}
-              pb={8}
-              px={8}
-            >
-              <Button
-                leftIcon={<FaPlay />}
-                colorScheme="blue"
-                size="lg"
-                w="full"
-                h="60px"
-                fontSize="xl"
-                onClick={handleStart}
-                transition="all 0.2s"
-                bg="blue.500"
-                position="relative"
-                overflow="hidden"
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 0 20px rgba(66, 153, 225, 0.4)',
-                  _before: {
-                    transform: "translateX(100%)",
-                  }
-                }}
-                _before={{
-                  content: '""',
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  background: "linear-gradient(45deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
-                  transform: "translateX(-100%)",
-                  transition: "transform 0.5s",
-                }}
-              >
-                Start Game
-              </Button>
-              <Button
-                leftIcon={<FaArrowLeft />}
-                variant="ghost"
-                color="white"
-                size="lg"
-                w="full"
-                onClick={onClose}
-                _hover={{
-                  transform: 'translateY(-2px)',
-                  bg: 'whiteAlpha.100',
-                }}
-                _active={{
-                  transform: 'translateY(1px)',
-                }}
-                transition="all 0.2s"
-              >
-                Go Back
-              </Button>
-            </ModalFooter>
-          </>
-        ) : (
-          <ModalBody 
-            py={16} 
-            display="flex" 
-            alignItems="center" 
-            justifyContent="center" 
-            minH="240px"
-            position="relative"
-            overflow="hidden"
-          >
-            <MotionBox
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ 
-                scale: [0.5, 1.2, 1],
-                opacity: [0, 1, 1]
-              }}
-              exit={{ scale: 0.5, opacity: 0 }}
-              transition={{ 
-                duration: 0.5,
-                ease: "easeOut"
-              }}
-              key={countdown}
+          ) : (
+            <ModalBody 
+              key="countdown" 
+              display="flex" 
+              alignItems="center" 
+              justifyContent="center" 
+              minH="400px"
               position="relative"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              width="160px"
-              height="160px"
             >
-              <Box
-                position="absolute"
-                inset="0"
-                borderRadius="full"
-                bg={countdown <= 3 ? "red.400" : "blue.400"}
-                opacity="0.15"
-              />
-              <Text
-                fontSize="96px"
-                lineHeight="1"
-                fontWeight="bold"
-                color={countdown <= 3 ? "red.400" : "blue.400"}
-                textShadow={`0 0 20px ${countdown <= 3 ? 'rgba(245, 101, 101, 0.4)' : 'rgba(66, 153, 225, 0.4)'}`}
-                userSelect="none"
-                position="relative"
-              >
-                {countdown}
-              </Text>
-            </MotionBox>
-          </ModalBody>
-        )}
+              <AnimatePresence mode="wait">
+                <MotionFlex
+                  key={countdown}
+                  position="relative"
+                  align="center"
+                  justify="center"
+                  direction="column"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ 
+                    scale: [0.5, 1.2, 1],
+                    opacity: [0, 1, 1]
+                  }}
+                  exit={{ scale: 1.5, opacity: 0 }}
+                  transition={{ 
+                    duration: 0.5,
+                    ease: "easeOut"
+                  }}
+                >
+                  {countdown === 0 ? (
+                    <>
+                      <Text
+                        fontSize="6xl"
+                        fontWeight="black"
+                        bgGradient="linear(to-r, green.400, teal.400)"
+                        bgClip="text"
+                        textShadow="0 0 40px rgba(72, 187, 120, 0.6)"
+                      >
+                        GO!
+                      </Text>
+                      {generateParticles(12)}
+                    </>
+                  ) : (
+                    <>
+                      <MotionBox
+                        position="absolute"
+                        width="200px"
+                        height="200px"
+                        borderRadius="full"
+                        border="4px solid"
+                        borderColor={countdown === 1 ? "red.400" : "blue.400"}
+                        initial={{ scale: 1, opacity: 0.2 }}
+                        animate={{ scale: 1.5, opacity: 0 }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1,
+                          ease: "easeOut"
+                        }}
+                      />
+                      <Text
+                        fontSize="8xl"
+                        fontWeight="black"
+                        color={countdown === 1 ? "red.400" : "blue.400"}
+                        textShadow={`0 0 40px ${countdown === 1 ? 'rgba(245, 101, 101, 0.6)' : 'rgba(66, 153, 225, 0.6)'}`}
+                      >
+                        {countdown}
+                      </Text>
+                    </>
+                  )}
+                </MotionFlex>
+              </AnimatePresence>
+            </ModalBody>
+          )}
+        </AnimatePresence>
       </ModalContent>
     </Modal>
   )
