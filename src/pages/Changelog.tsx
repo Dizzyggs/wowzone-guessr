@@ -152,30 +152,42 @@ const Changelog = () => {
                 transition: 'all 0.2s'
               }}
             >
-              <Flex justify="space-between" align="center">
+              <Flex 
+                justify="space-between" 
+                align={{ base: "start", md: "center" }}
+                direction={{ base: "column", md: "row" }}
+                gap={{ base: 3, md: 0 }}
+              >
                 <Heading size="md" color="white">
                   {changelog.title}
                 </Heading>
-                <Flex align="center" gap={4}>
-                  <IconButton
-                    aria-label="Like changelog"
-                    icon={<FaThumbsUp />}
-                    size="sm"
-                    colorScheme={likedChangelogs.has(changelog.id!) ? 'blue' : 'gray'}
-                    variant={likedChangelogs.has(changelog.id!) ? 'solid' : 'outline'}
-                    onClick={(e) => handleLike(e, changelog.id!)}
-                    _hover={{
-                      transform: 'scale(1.1)',
-                    }}
-                    transition="all 0.2s"
-                  />
-                  <Text color="gray.400" fontSize="sm">
-                    {changelog.likes || 0}
-                  </Text>
+                <Flex 
+                  align="center" 
+                  gap={4}
+                  flexWrap="wrap"
+                  fontSize={{ base: "xs", md: "sm" }}
+                >
+                  <Flex align="center" gap={2}>
+                    <IconButton
+                      aria-label="Like changelog"
+                      icon={<FaThumbsUp />}
+                      size="sm"
+                      colorScheme={likedChangelogs.has(changelog.id!) ? 'blue' : 'gray'}
+                      variant={likedChangelogs.has(changelog.id!) ? 'solid' : 'outline'}
+                      onClick={(e) => handleLike(e, changelog.id!)}
+                      _hover={{
+                        transform: 'scale(1.1)',
+                      }}
+                      transition="all 0.2s"
+                    />
+                    <Text color="gray.400">
+                      {changelog.likes || 0}
+                    </Text>
+                  </Flex>
                   <Badge colorScheme={getTypeColor(changelog.type)} fontSize="0.8em">
                     {changelog.type.toUpperCase()}
                   </Badge>
-                  <Text color="gray.400" fontSize="sm">
+                  <Text color="gray.400">
                     {changelog.date.toLocaleDateString()}
                   </Text>
                 </Flex>

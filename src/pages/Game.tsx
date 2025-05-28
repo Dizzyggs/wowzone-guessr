@@ -10,6 +10,7 @@ import {
   Text,
   VStack,
   Icon,
+  useBreakpointValue
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -72,6 +73,9 @@ const Game = () => {
   
   // Multiple choice mode is when mode is 'easy'
   const isMultipleChoice = mode === 'easy'
+  
+  // Add mobile detection
+  const isMobile = useBreakpointValue({ base: true, md: false })
   
   const [gameState, setGameState] = useState<GameState>({
     score: 0,
@@ -235,8 +239,6 @@ const Game = () => {
     setInput('')
   }
 
-  // const isMobile = useBreakpointValue({ base: true, md: false })
-
   // Add this function to handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -284,12 +286,12 @@ const Game = () => {
   };
 
   return (
-    <Container maxW="container.xl" py={4} position="relative">
+    <Container maxW="container.xl" py={4} position="relative" px={{ base: 2, md: 4 }}>
       <VStack spacing={4} align="stretch">
         {/* Score and Lives */}
-        <Flex justify="space-between" align="center">
+        <Flex justify="space-between" align="center" fontSize={{ base: "sm", md: "md" }}>
           <ScoreCounter value={gameState.score} />
-          <Box bg="rgba(25, 4, 4, 0.7)" px={4} py={2} borderRadius="lg">
+          <Box bg="rgba(25, 4, 4, 0.7)" px={3} py={1} borderRadius="lg">
             <Text color="red.300">Lives Left {Array(gameState.lives).fill('❤️').join(' ')}</Text>
           </Box>
           <Flex gap={2} align="center">
@@ -304,7 +306,14 @@ const Game = () => {
         </Flex>
 
         {/* Game Area */}
-        <Box position="relative" width="100%" paddingTop="56.25%" borderRadius="xl" overflow="hidden">
+        <Box 
+          position="relative" 
+          width="100%" 
+          height={{ base: "50vh", md: "auto" }}
+          paddingTop={{ base: "0", md: "56.25%" }} 
+          borderRadius="xl" 
+          overflow="hidden"
+        >
           <MotionImage
             key={gameState.imageKey}
             src={gameState.currentImage}
@@ -341,22 +350,29 @@ const Game = () => {
             </Button>
           </Box>
 
-          {/* Multiple Choice Options Container */}
-          {isMultipleChoice && (
+          {/* Multiple Choice Options Container - Desktop Only */}
+          {isMultipleChoice && !isMobile && (
             <MotionButtonContainer
               position="absolute"
               bottom={0}
               left={0}
               right={0}
-              bg="rgba(0, 0, 0, 0.5)"
+              bg="rgba(0, 0, 0, 0.85)"
               backdropFilter="blur(8px)"
               p={4}
               variants={buttonContainerVariants}
               initial="initial"
-              whileHover="hover"
+              whileHover={{ 
+                opacity: 1,
+                transition: { duration: 0.2 }
+              }}
               animate="initial"
             >
-              <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+              <Grid 
+                templateColumns="repeat(2, 1fr)"
+                gap={4}
+                width="100%"
+              >
                 {gameState.options.map((option, index) => (
                   <MotionButton
                     key={option.id ? option.id : index}
@@ -365,12 +381,21 @@ const Game = () => {
                     colorScheme="blue"
                     size="lg"
                     variant="outline"
-                    whileHover={{
-                      scale: 1.02,
-                      y: -2,
-                      transition: { duration: 0.2 }
+                    fontSize="md"
+                    py={6}
+                    width="100%"
+                    whiteSpace="normal"
+                    height="auto"
+                    borderWidth="2px"
+                    bg="rgba(0, 0, 0, 0.3)"
+                    _hover={{
+                      bg: "rgba(66, 153, 225, 0.2)",
+                      transform: "scale(1.02)"
                     }}
-                    whileTap={{ scale: 0.98 }}
+                    _active={{
+                      bg: "rgba(66, 153, 225, 0.3)",
+                      transform: "scale(0.98)"
+                    }}
                   >
                     {option.name}
                   </MotionButton>
@@ -379,6 +404,51 @@ const Game = () => {
             </MotionButtonContainer>
           )}
         </Box>
+
+        {/* Multiple Choice Options Container - Mobile Only */}
+        {isMultipleChoice && isMobile && (
+          <Box 
+            mt={4}
+            bg="rgba(0, 0, 0, 0.85)"
+            borderRadius="xl"
+            p={3}
+            pb="calc(env(safe-area-inset-bottom) + 12px)"
+          >
+            <Grid 
+              templateColumns="1fr"
+              gap={3}
+              width="100%"
+            >
+              {gameState.options.map((option, index) => (
+                <MotionButton
+                  key={option.id ? option.id : index}
+                  onClick={() => handleGuess(option.name)}
+                  isDisabled={gameState.inputDisabled}
+                  colorScheme="blue"
+                  size="lg"
+                  variant="outline"
+                  fontSize="lg"
+                  py={6}
+                  width="100%"
+                  whiteSpace="normal"
+                  height="auto"
+                  borderWidth="2px"
+                  bg="rgba(0, 0, 0, 0.3)"
+                  _hover={{
+                    bg: "rgba(66, 153, 225, 0.2)",
+                    transform: "scale(1.02)"
+                  }}
+                  _active={{
+                    bg: "rgba(66, 153, 225, 0.3)",
+                    transform: "scale(0.98)"
+                  }}
+                >
+                  {option.name}
+                </MotionButton>
+              ))}
+            </Grid>
+          </Box>
+        )}
 
         {/* Manual Input Mode */}
         {!isMultipleChoice && (

@@ -106,15 +106,27 @@ const FeedbackPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Flex justify="space-between" align="center" mb={8}>
-          <Heading size="xl" display="flex" alignItems="center" gap={3}>
+        <Flex 
+          justify="space-between" 
+          align={{ base: "start", md: "center" }}
+          direction={{ base: "column", md: "row" }}
+          gap={{ base: 4, md: 0 }}
+          mb={8}
+        >
+          <Heading 
+            size={{ base: "lg", md: "xl" }} 
+            display="flex" 
+            alignItems="center" 
+            gap={3}
+          >
             <Icon as={FaComments} color="blue.400" />
             Community Feedback
           </Heading>
           <Button
             onClick={onSubmitOpen}
             colorScheme="blue"
-            size="lg"
+            size={{ base: "md", md: "lg" }}
+            width={{ base: "100%", md: "auto" }}
             _hover={{
               transform: 'translateY(-2px)',
               boxShadow: '0 4px 12px rgba(66, 153, 225, 0.4)'
@@ -125,12 +137,13 @@ const FeedbackPage = () => {
           </Button>
         </Flex>
 
-        <Box maxW="300px" mb={6}>
+        <Box maxW={{ base: "100%", md: "300px" }} mb={6}>
           <MotionSelect
             icon={<Icon as={FaSort} />}
             value={sortFilter}
             onChange={(e) => setSortFilter(e.target.value)}
             bg="gray.900"
+            size={{ base: "md", md: "lg" }}
             borderColor="whiteAlpha.300"
             _hover={{
               borderColor: "blue.400",
@@ -166,7 +179,7 @@ const FeedbackPage = () => {
           ) : (
             <SimpleGrid 
               columns={{ base: 1, md: 2, lg: 3 }} 
-              spacing={4}
+              spacing={{ base: 3, md: 4 }}
               as={motion.div}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -193,16 +206,25 @@ const FeedbackPage = () => {
                 >
                   <CardBody>
                     <VStack align="stretch" spacing={3}>
-                      <Flex justify="space-between" align="center">
+                      <Flex 
+                        justify="space-between" 
+                        align={{ base: "start", md: "center" }}
+                        direction={{ base: "column", md: "row" }}
+                        gap={{ base: 2, md: 0 }}
+                      >
                         <Badge
                           colorScheme={getStatusColor(item.status)}
                           px={2}
                           py={1}
                           borderRadius="full"
+                          alignSelf={{ base: "flex-start", md: "center" }}
                         >
                           {item.status}
                         </Badge>
-                        <Text fontSize="sm" color="whiteAlpha.700">
+                        <Text 
+                          fontSize={{ base: "xs", md: "sm" }} 
+                          color="whiteAlpha.700"
+                        >
                           {item.timestamp.toLocaleDateString()}
                         </Text>
                       </Flex>
@@ -211,21 +233,25 @@ const FeedbackPage = () => {
                           <Icon
                             key={i}
                             as={FaStar}
-                            w={4}
-                            h={4}
+                            w={{ base: 3, md: 4 }}
+                            h={{ base: 3, md: 4 }}
                             color={i < item.rating ? "yellow.400" : "gray.500"}
                           />
                         ))}
                       </HStack>
                       <Text
                         noOfLines={3}
-                        fontSize="md"
+                        fontSize={{ base: "sm", md: "md" }}
                         color="white"
                       >
                         {item.message}
                       </Text>
                       {item.response && (
-                        <Badge colorScheme="blue" alignSelf="flex-start">
+                        <Badge 
+                          colorScheme="blue" 
+                          alignSelf="flex-start"
+                          fontSize={{ base: "xs", md: "sm" }}
+                        >
                           Has Response
                         </Badge>
                       )}
