@@ -16,7 +16,7 @@ import {
   GridItem,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { FaTrophy, FaClock, FaCheck, FaUser, FaRocket, FaForward, FaMedal } from 'react-icons/fa'
+import { FaTrophy, FaClock, FaCheck, FaForward, FaMedal } from 'react-icons/fa'
 import { checkAndStoreScore, getTopScores } from '../firebaseFunctions'
 import GameNotification from './GameNotification'
 import { calculateTimeBonus } from '../utils/scoring'
