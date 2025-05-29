@@ -1,33 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
   ModalBody,
-  ModalFooter,
   Button,
   Text,
   VStack,
   HStack,
   Icon,
   Input,
-  Divider,
-  keyframes,
+  Flex,
+  Spinner,
+  Grid,
+  GridItem,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
-import { FaTrophy, FaClock, FaCheck, FaUser, FaRocket, FaForward } from 'react-icons/fa'
-import { checkAndStoreScore } from '../firebaseFunctions'
+import { FaTrophy, FaClock, FaCheck, FaUser, FaRocket, FaForward, FaMedal } from 'react-icons/fa'
+import { checkAndStoreScore, getTopScores } from '../firebaseFunctions'
 import GameNotification from './GameNotification'
 import { calculateTimeBonus } from '../utils/scoring'
 
 const MotionModalContent = motion(ModalContent)
-
-const glowAnimation = keyframes`
-  0% { box-shadow: 0 0 10px rgba(236, 201, 75, 0.4), 0 0 20px rgba(236, 201, 75, 0.2); }
-  50% { box-shadow: 0 0 15px rgba(236, 201, 75, 0.5), 0 0 30px rgba(236, 201, 75, 0.3); }
-  100% { box-shadow: 0 0 10px rgba(236, 201, 75, 0.4), 0 0 20px rgba(236, 201, 75, 0.2); }
-`
 
 interface ResultsModalProps {
   isOpen: boolean
@@ -46,6 +40,31 @@ const ResultsModal = ({ isOpen, onClose, questionsAnswered, score, timeElapsed, 
   const [showNotification, setShowNotification] = useState(false)
   const [notificationText, setNotificationText] = useState('')
   const [notificationType, setNotificationType] = useState<'success' | 'error'>('success')
+  const [potentialRank, setPotentialRank] = useState<{ rank: number; total: number } | null>(null)
+  const [isLoadingRank, setIsLoadingRank] = useState(true)
+
+  useEffect(() => {
+    const calculatePotentialRank = async () => {
+      setIsLoadingRank(true)
+      try {
+        const scores = await getTopScores(mode)
+        let rank = 1
+        for (const entry of scores) {
+          if (score <= entry.score) {
+            rank++
+          }
+        }
+        setPotentialRank({ rank, total: scores.length + 1 })
+      } catch (error) {
+        console.error('Error calculating potential rank:', error)
+      }
+      setIsLoadingRank(false)
+    }
+
+    if (isOpen) {
+      calculatePotentialRank()
+    }
+  }, [isOpen, score, mode])
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
@@ -88,11 +107,10 @@ const ResultsModal = ({ isOpen, onClose, questionsAnswered, score, timeElapsed, 
   const baseScore = score - timeBonus.bonus
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} isCentered size="md">
       <ModalOverlay backdropFilter="blur(10px)" bg="rgba(0, 0, 0, 0.6)" />
       <MotionModalContent
-        bg="rgba(10, 15, 28, 0.95)"
-        p={6}
+        bg="rgba(10, 15, 28, 0.97)"
         border="2px solid"
         borderColor="blue.400"
         boxShadow="0 8px 32px rgba(66, 153, 225, 0.4)"
@@ -101,125 +119,138 @@ const ResultsModal = ({ isOpen, onClose, questionsAnswered, score, timeElapsed, 
         exit={{ opacity: 0, y: 20, scale: 0.95 }}
         transition={{ duration: 0.2 }}
       >
-        <ModalHeader
-          textAlign="center"
-          fontSize="3xl"
-          fontWeight="bold"
-          color="white"
-          pb={6}
-        >
-          Game Results
-        </ModalHeader>
-        <ModalBody>
+        <ModalBody py={6}>
           <VStack spacing={6} align="stretch">
-            <HStack justify="space-between" p={4} bg="rgba(66, 153, 225, 0.1)" borderRadius="lg">
-              <HStack>
-                <Icon as={FaCheck} color="green.400" w={6} h={6} />
-                <Text color="white" fontSize="lg">Base Score</Text>
-              </HStack>
-              <Text color="white" fontSize="xl" fontWeight="bold">{baseScore}</Text>
-            </HStack>
-
-            {timeBonus.bonus > 0 && (
-              <HStack justify="space-between" p={4} bg="rgba(147, 51, 234, 0.1)" borderRadius="lg">
-                <HStack>
-                  <Icon as={FaRocket} color="purple.400" w={6} h={6} />
-                  <Text color="white" fontSize="lg">Time Bonus</Text>
-                </HStack>
-                <Text color="purple.400" fontSize="xl" fontWeight="bold">
-                  +{timeBonus.bonus}
-                </Text>
-              </HStack>
-            )}
-
-            <Divider borderColor="whiteAlpha.200" />
-
-            <HStack 
-              justify="space-between" 
-              p={4} 
-              bg="rgba(66, 153, 225, 0.2)" 
-              borderRadius="lg"
-              border="2px solid"
-              borderColor="yellow.400"
-              animation={`${glowAnimation} 2s infinite`}
-              style={{
-                willChange: 'box-shadow'
-              }}
-            >
-              <HStack>
-                <Icon as={FaTrophy} color="yellow.400" w={6} h={6} />
-                <Text color="white" fontSize="lg">Total Score</Text>
-              </HStack>
-              <Text color="yellow.400" fontSize="2xl" fontWeight="bold">{score}</Text>
-            </HStack>
-
-            <HStack justify="space-between" p={4} bg="rgba(66, 153, 225, 0.1)" borderRadius="lg">
-              <HStack>
-                <Icon as={FaCheck} color="green.400" w={6} h={6} />
-                <Text color="white" fontSize="lg">Questions Answered</Text>
-              </HStack>
-              <Text color="white" fontSize="xl" fontWeight="bold">{questionsAnswered}</Text>
-            </HStack>
-
-            <HStack justify="space-between" p={4} bg="rgba(66, 153, 225, 0.1)" borderRadius="lg">
-              <HStack>
-                <Icon as={FaForward} color="gray.400" w={6} h={6} />
-                <Text color="white" fontSize="lg">Questions Skipped</Text>
-              </HStack>
-              <Text color="gray.400" fontSize="xl" fontWeight="bold">{skippedQuestions}</Text>
-            </HStack>
-
-            <HStack justify="space-between" p={4} bg="rgba(66, 153, 225, 0.1)" borderRadius="lg">
-              <HStack>
-                <Icon as={FaClock} color="purple.400" w={6} h={6} />
-                <Text color="white" fontSize="lg">Time</Text>
-              </HStack>
-              <Text color="white" fontSize="xl" fontWeight="bold">{formatTime(timeElapsed)}</Text>
-            </HStack>
-
-            {timeBonus.bonus > 0 && (
-              <Text color="purple.400" fontSize="md" textAlign="center" fontStyle="italic">
-                Bonus points for {timeBonus.message}!
+            {/* Title and Rank */}
+            <VStack spacing={4} align="center">
+              <Text fontSize="2xl" fontWeight="bold" color="white">
+                Game Results
               </Text>
-            )}
+              
+              <HStack 
+                justify="center"
+                p={3}
+                px={6}
+                bg="rgba(236, 201, 75, 0.1)"
+                borderRadius="full"
+                border="2px solid"
+                borderColor="yellow.400"
+              >
+                <Icon as={FaMedal} color="yellow.400" w={5} h={5} />
+                {isLoadingRank ? (
+                  <Spinner color="yellow.400" size="sm" />
+                ) : potentialRank ? (
+                  <Flex align="center" gap={2}>
+                    <Text color="yellow.400" fontSize="xl" fontWeight="bold">
+                      #{potentialRank.rank}
+                    </Text>
+                    <Text color="gray.400" fontSize="sm">
+                      of {potentialRank.total}
+                    </Text>
+                  </Flex>
+                ) : (
+                  <Text color="gray.400" fontSize="sm">Unable to calculate</Text>
+                )}
+              </HStack>
+            </VStack>
 
-            {!hasSubmitted && (
-              <VStack spacing={2} align="stretch">
+            {/* Score Section */}
+            <Grid
+              templateColumns="repeat(2, 1fr)"
+              gap={3}
+              bg="rgba(0, 0, 0, 0.2)"
+              p={4}
+              borderRadius="xl"
+            >
+              <GridItem>
+                <Text color="gray.400" fontSize="sm">Base Score</Text>
+                <Text color="white" fontSize="xl" fontWeight="bold">{baseScore}</Text>
+              </GridItem>
+              {timeBonus.bonus > 0 && (
+                <GridItem>
+                  <Text color="gray.400" fontSize="sm">Time Bonus</Text>
+                  <Text color="purple.400" fontSize="xl" fontWeight="bold">+{timeBonus.bonus}</Text>
+                </GridItem>
+              )}
+              <GridItem colSpan={2}>
+                <Text color="gray.400" fontSize="sm">Total Score</Text>
+                <Text color="yellow.400" fontSize="2xl" fontWeight="bold">{score}</Text>
+              </GridItem>
+            </Grid>
+
+            {/* Stats Grid */}
+            <Grid
+              templateColumns="repeat(2, 1fr)"
+              gap={3}
+              bg="rgba(0, 0, 0, 0.2)"
+              p={4}
+              borderRadius="xl"
+            >
+              <GridItem>
                 <HStack>
-                  <Icon as={FaUser} color="blue.400" w={5} h={5} />
-                  <Text color="white" fontSize="md">Enter your name to save score:</Text>
+                  <Icon as={FaCheck} color="green.400" w={4} h={4} />
+                  <Text color="gray.400" fontSize="sm">Answered</Text>
                 </HStack>
+                <Text color="white" fontSize="lg" fontWeight="bold" ml={6}>{questionsAnswered}</Text>
+              </GridItem>
+              <GridItem>
+                <HStack>
+                  <Icon as={FaForward} color="gray.400" w={4} h={4} />
+                  <Text color="gray.400" fontSize="sm">Skipped</Text>
+                </HStack>
+                <Text color="white" fontSize="lg" fontWeight="bold" ml={6}>{skippedQuestions}</Text>
+              </GridItem>
+              <GridItem colSpan={2}>
+                <HStack>
+                  <Icon as={FaClock} color="purple.400" w={4} h={4} />
+                  <Text color="gray.400" fontSize="sm">Time</Text>
+                </HStack>
+                <Text color="white" fontSize="lg" fontWeight="bold" ml={6}>
+                  {formatTime(timeElapsed)}
+                  {timeBonus.bonus > 0 && (
+                    <Text as="span" color="purple.400" fontSize="sm" ml={2}>
+                      ({timeBonus.message})
+                    </Text>
+                  )}
+                </Text>
+              </GridItem>
+            </Grid>
+
+            {/* Save Score Section */}
+            {!hasSubmitted && (
+              <VStack spacing={3} align="stretch">
                 <Input
-                  placeholder="Your name"
+                  placeholder="Enter your name to save score"
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                   bg="rgba(66, 153, 225, 0.1)"
                   border="2px solid"
                   borderColor="blue.400"
                   color="white"
+                  size="lg"
                   _hover={{ borderColor: "blue.300" }}
                   _focus={{ borderColor: "blue.300", boxShadow: "none" }}
                 />
+                <HStack>
+                  <Button
+                    colorScheme="blue"
+                    onClick={handleSubmitScore}
+                    isLoading={isSubmitting}
+                    loadingText="Saving..."
+                    leftIcon={<Icon as={FaTrophy} />}
+                    flex={1}
+                    size="lg"
+                  >
+                    Save Score
+                  </Button>
+                  <Button variant="ghost" color="white" onClick={onClose} size="lg">
+                    Skip
+                  </Button>
+                </HStack>
               </VStack>
             )}
           </VStack>
         </ModalBody>
-        <ModalFooter gap={4}>
-          {!hasSubmitted && (
-            <Button
-              colorScheme="blue"
-              onClick={handleSubmitScore}
-              isLoading={isSubmitting}
-              loadingText="Saving..."
-              leftIcon={<Icon as={FaTrophy} />}
-            >
-              Save Score
-            </Button>
-          )}
-          <Button variant="ghost" color="white" onClick={onClose}>
-            {hasSubmitted ? 'Close' : 'Skip'}
-          </Button>
-        </ModalFooter>
       </MotionModalContent>
 
       {showNotification && (
