@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Box, Image } from '@chakra-ui/react'
+import { Box, Image, Spinner } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { preloadImagePaths } from '../utils/imagePreloader'
 
@@ -15,21 +15,18 @@ const slides = [
 
 const slideVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 1000 : -1000,
+    x: direction > 0 ? '100%' : '-100%',
     opacity: 0,
-    scale: 0.95,
   }),
   center: {
     zIndex: 1,
     x: 0,
     opacity: 1,
-    scale: 1,
   },
   exit: (direction: number) => ({
     zIndex: 0,
-    x: direction < 0 ? 1000 : -1000,
+    x: direction < 0 ? '100%' : '-100%',
     opacity: 0,
-    scale: 1.05,
   }),
 }
 
@@ -41,24 +38,41 @@ const swipePower = (offset: number, velocity: number) => {
 const HeroSlideshow = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [direction, setDirection] = useState(1)
+  const [isLoading, setIsLoading] = useState(true)
+  const [imagesLoaded, setImagesLoaded] = useState<{ [key: string]: boolean }>({})
 
   useEffect(() => {
     // Preload all slides when component mounts
-    preloadImagePaths(slides)
+    const loadImages = async () => {
+      setIsLoading(true)
+      await preloadImagePaths(slides)
+      setIsLoading(false)
+    }
+    loadImages()
 
     const timer = setInterval(() => {
-      const nextSlide = (currentSlide + 1) % slides.length
-      setDirection(1)
-      setCurrentSlide(nextSlide)
+      // Only advance if current image is loaded
+      if (imagesLoaded[slides[currentSlide]]) {
+        const nextSlide = (currentSlide + 1) % slides.length
+        setDirection(1)
+        setCurrentSlide(nextSlide)
+      }
     }, 5000)
 
     return () => clearInterval(timer)
-  }, [currentSlide])
+  }, [currentSlide, imagesLoaded])
+
+  const handleImageLoad = (src: string) => {
+    setImagesLoaded(prev => ({ ...prev, [src]: true }))
+  }
 
   const paginate = (newDirection: number) => {
-    const nextSlide = (currentSlide + newDirection + slides.length) % slides.length
-    setDirection(newDirection)
-    setCurrentSlide(nextSlide)
+    // Only allow pagination if current image is loaded
+    if (imagesLoaded[slides[currentSlide]]) {
+      const nextSlide = (currentSlide + newDirection + slides.length) % slides.length
+      setDirection(newDirection)
+      setCurrentSlide(nextSlide)
+    }
   }
 
   return (
@@ -81,6 +95,17 @@ const HeroSlideshow = () => {
       overflow="hidden"
       borderRadius="xl"
     >
+      {isLoading && (
+        <Box
+          position="absolute"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+          zIndex={2}
+        >
+          <Spinner size="xl" color="blue.400" />
+        </Box>
+      )}
       <AnimatePresence
         initial={false}
         mode="wait"
@@ -99,9 +124,8 @@ const HeroSlideshow = () => {
           right={0}
           bottom={0}
           transition={{
-            x: { type: "spring", stiffness: 400, damping: 30 },
-            opacity: { duration: 0.5 },
-            scale: { duration: 0.5 }
+            x: { type: "tween", duration: 0.5, ease: "easeInOut" },
+            opacity: { duration: 0.3 }
           }}
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
@@ -124,6 +148,9 @@ const HeroSlideshow = () => {
             w="full"
             h="full"
             loading="eager"
+            onLoad={() => handleImageLoad(slides[currentSlide])}
+            opacity={imagesLoaded[slides[currentSlide]] ? 1 : 0}
+            transition="opacity 0.3s"
           />
         </MotionBox>
       </AnimatePresence>

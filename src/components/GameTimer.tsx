@@ -5,6 +5,13 @@ import { FaClock } from 'react-icons/fa'
 
 const MotionBox = motion(Box)
 
+const glassBoxStyle = {
+  background: 'rgba(13, 16, 33, 0.7)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+}
+
 interface GameTimerProps {
   isRunning: boolean
   onTimeUpdate?: (time: number) => void
@@ -43,16 +50,13 @@ const GameTimer = ({ isRunning, onTimeUpdate }: GameTimerProps) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      bg="rgba(13, 16, 33, 0.7)"
       borderRadius="lg"
       px={3}
       py={1}
-      border="1px solid"
-      borderColor="blue.400"
-      boxShadow="0 0 10px rgba(66, 153, 225, 0.15)"
       display="flex"
       alignItems="center"
       gap={2}
+      sx={glassBoxStyle}
     >
       <Icon 
         as={FaClock} 

@@ -8,7 +8,8 @@ import {
   Text,
   VStack,
   useDisclosure,
-  Collapse
+  Collapse,
+  useBreakpointValue
 } from '@chakra-ui/react'
 import { useZoomLevel } from '../hooks/useZoomLevel'
 import { useState, useEffect } from 'react'
@@ -21,6 +22,7 @@ const ZoomWarning = ({ isPlaying = false }: ZoomWarningProps) => {
   const zoomLevel = useZoomLevel()
   const { isOpen, onClose } = useDisclosure({ defaultIsOpen: true })
   const [isDismissed, setIsDismissed] = useState(false)
+  const isMobile = useBreakpointValue({ base: true, md: false })
 
   // Reset dismissed state when zoom changes
   useEffect(() => {
@@ -29,7 +31,8 @@ const ZoomWarning = ({ isPlaying = false }: ZoomWarningProps) => {
     }
   }, [zoomLevel])
 
-  if (zoomLevel === 1 || isDismissed) return null
+  // Don't show warning on mobile devices
+  if (isMobile || zoomLevel === 1 || isDismissed) return null
 
   const handleDismiss = () => {
     setIsDismissed(true)
