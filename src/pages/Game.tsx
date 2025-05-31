@@ -96,16 +96,20 @@ const glassButtonStyle = {
 }
 
 const glassInputStyle = {
-  bg: 'rgba(0, 0, 0, 0.2)',
+  bg: 'rgba(13, 16, 33, 0.7)',
+  backdropFilter: 'blur(10px)',
   border: '1px solid rgba(255, 255, 255, 0.1)',
+  boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
   color: 'white',
   _placeholder: { color: 'whiteAlpha.500' },
   _hover: {
     border: '1px solid rgba(255, 255, 255, 0.2)',
+    bg: 'rgba(13, 16, 33, 0.8)',
   },
   _focus: {
     border: '1px solid rgba(255, 255, 255, 0.3)',
     boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.3)',
+    bg: 'rgba(13, 16, 33, 0.9)',
   },
 }
 
@@ -478,31 +482,10 @@ const Game = () => {
                 </Grid>
               </MotionButtonContainer>
             )}
-
-            {/* Manual Input Mode */}
-            {!isMultipleChoice && (
-              <Box
-                position="absolute"
-                bottom={0}
-                left={0}
-                right={0}
-                sx={glassBoxStyle}
-                p={4}
-                borderTopRadius="xl"
-              >
-                <Input
-                  value={input}
-                  onChange={handleInputChange}
-                  placeholder="Enter zone name..."
-                  size="lg"
-                  sx={glassInputStyle}
-                />
-              </Box>
-            )}
           </Box>
         </Box>
 
-        {/* Multiple Choice Options Container - Mobile Only - Now outside game area */}
+        {/* Multiple Choice Options Container - Mobile Only */}
         {isMultipleChoice && isMobile && (
           <Box 
             mt={4}
@@ -535,6 +518,63 @@ const Game = () => {
               ))}
             </Grid>
           </Box>
+        )}
+
+        {/* Manual Input Mode */}
+        {!isMultipleChoice && (
+          <MotionButtonContainer
+            mt={4}
+            px={4}
+            pb="calc(env(safe-area-inset-bottom) + 12px)"
+            sx={{
+              borderRadius: 'xl',
+            }}
+          >
+            <Input
+              value={input}
+              onChange={handleInputChange}
+              placeholder="Enter zone name..."
+              size="lg"
+              sx={glassInputStyle}
+            />
+            {suggestions.length > 0 && (
+              <Box
+                mt={2}
+                sx={{
+                  ...glassBoxStyle,
+                  background: 'rgba(13, 16, 33, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                }}
+                borderRadius="md"
+                overflow="hidden"
+              >
+                <AnimatePresence>
+                  {suggestions.map((suggestion, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.15, delay: index * 0.05 }}
+                      whileHover={{ 
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        transition: { duration: 0.1 }
+                      }}
+                    >
+                      <Box
+                        px={4}
+                        py={2}
+                        cursor="pointer"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        <Text color="white">{suggestion}</Text>
+                      </Box>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </Box>
+            )}
+          </MotionButtonContainer>
         )}
       </VStack>
 
