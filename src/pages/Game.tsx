@@ -23,10 +23,9 @@ import ResultsModal from '../components/ResultsModal'
 import ReadyModal from '../components/ReadyModal'
 import ZoomWarning from '../components/ZoomWarning'
 import { FaForward } from 'react-icons/fa'
-import { glassEffect, buttonGlassEffect, inputGlassEffect } from '../styles/glassStyles'
 import './Game.scss'
 
-const MotionBox = motion(Box)
+// const MotionBox = motion(Box)
 const MotionButton = motion(Button)
 const MotionImage = motion(Image)
 
