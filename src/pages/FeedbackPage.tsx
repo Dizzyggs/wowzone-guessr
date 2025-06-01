@@ -218,6 +218,7 @@ const FeedbackPage = () => {
                   fontSize="sm"
                   px={6}
                   h={12}
+                  color={"white"}
                 >
                   Filter
                 </MenuButton>
