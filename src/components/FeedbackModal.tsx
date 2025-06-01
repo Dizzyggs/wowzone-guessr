@@ -3,7 +3,6 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
   ModalBody,
   ModalFooter,
   Button,
@@ -14,7 +13,9 @@ import {
   Icon,
   Text,
   Box,
-  Flex
+  Flex,
+  IconButton,
+  Heading
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaStar, FaSmile, FaExclamationCircle, FaPaperPlane, FaTimes } from 'react-icons/fa'
@@ -23,6 +24,7 @@ import { containsProfanity } from '../utils/profanityFilter'
 
 const MotionModalContent = motion(ModalContent)
 const MotionBox = motion(Box)
+const MotionIcon = motion(Icon)
 
 interface FeedbackModalProps {
   isOpen: boolean
@@ -50,175 +52,255 @@ const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
     const newMessage = e.target.value
     setMessage(newMessage)
     if (showProfanityError) {
-      // Only check while error is shown to avoid premature warnings
       const profanityCheck = containsProfanity(newMessage)
       setShowProfanityError(profanityCheck.hasProfanity)
     }
   }
 
   const handleSubmit = async () => {
+    if (!message.trim()) {
+      toast({
+        title: 'Message required',
+        description: 'Please enter your feedback message',
+        status: 'error',
+        duration: 3000,
+      })
+      return
+    }
+
+    if (!rating) {
+      toast({
+        title: 'Rating required',
+        description: 'Please rate your experience',
+        status: 'error',
+        duration: 3000,
+      })
+      return
+    }
+
+    const profanityCheck = containsProfanity(message)
+    if (profanityCheck.hasProfanity) {
+      setShowProfanityError(true)
+      return
+    }
+
+    setIsSubmitting(true)
     try {
-      if (!message.trim()) {
-        toast({
-          title: 'Error',
-          description: 'Please enter your feedback',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
-        return
-      }
-
-      if (rating === 0) {
-        toast({
-          title: 'Error',
-          description: 'Please select a rating',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        })
-        return
-      }
-
-      const profanityCheck = containsProfanity(message)
-      if (profanityCheck.hasProfanity) {
-        setShowProfanityError(true)
-        return
-      }
-
-      setIsSubmitting(true)
-      const result = await submitFeedback(message.trim(), rating)
-      
-      if (result.success) {
-        toast({
-          title: 'Success',
-          description: result.message,
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        })
-        setMessage('')
-        setRating(0)
-        onClose()
-      } else {
-        throw new Error(result.message)
-      }
+      await submitFeedback(message, rating)
+      toast({
+        title: 'Feedback submitted',
+        description: 'Thank you for your feedback!',
+        status: 'success',
+        duration: 3000,
+      })
+      onClose()
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to submit feedback. Please try again.',
+        description: 'Failed to submit feedback. Please try again.',
         status: 'error',
-        duration: 4000,
-        isClosable: true,
+        duration: 3000,
       })
-    } finally {
-      setIsSubmitting(false)
+    }
+    setIsSubmitting(false)
+  }
+
+  const getRatingLabel = (rating: number) => {
+    switch (rating) {
+      case 1: return 'Poor'
+      case 2: return 'Fair'
+      case 3: return 'Good'
+      case 4: return 'Great'
+      case 5: return 'Excellent'
+      default: return 'Select your rating'
+    }
+  }
+
+  const getRatingColor = (rating: number) => {
+    switch (rating) {
+      case 1: return 'red.400'
+      case 2: return 'orange.400'
+      case 3: return 'yellow.400'
+      case 4: return 'green.400'
+      case 5: return 'blue.400'
+      default: return 'whiteAlpha.400'
     }
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} isCentered size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} isCentered size="xl">
       <ModalOverlay backdropFilter="blur(10px)" bg="rgba(0, 0, 0, 0.6)" />
       <MotionModalContent
-        bg="rgba(10, 15, 28, 0.95)"
-        p={6}
-        border="2px solid"
-        borderColor="blue.400"
-        boxShadow="0 8px 32px rgba(66, 153, 225, 0.4)"
+        bg="rgba(13, 16, 33, 0.95)"
+        backdropFilter="blur(10px)"
+        borderRadius="2xl"
+        border="1px solid"
+        borderColor="whiteAlpha.200"
+        boxShadow="dark-lg"
         initial={{ opacity: 0, y: -20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.95 }}
         transition={{ duration: 0.2 }}
+        mx={4}
+        overflow="hidden"
       >
-        <ModalHeader fontSize="2xl" textAlign="center" display="flex" alignItems="center" gap={3}>
-          <Icon as={FaSmile} color="blue.400" />
-          Submit Feedback
-        </ModalHeader>
-        <ModalBody>
-          <VStack spacing={6}>
-            <VStack spacing={2} align="center" w="full">
-              <Text mb={2}>Rate your experience</Text>
-              <HStack spacing={2}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <MotionBox
-                    key={star}
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    cursor="pointer"
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setRating(star)}
-                    onMouseEnter={() => setHoveredRating(star)}
-                    onMouseLeave={() => setHoveredRating(0)}
-                  >
-                    <Icon
-                      as={FaStar}
-                      w={8}
-                      h={8}
-                      color={(hoveredRating || rating) >= star ? "yellow.400" : "gray.500"}
-                    />
-                  </MotionBox>
-                ))}
-              </HStack>
-            </VStack>
-            
-            <Box position="relative" w="full">
+        {/* Header */}
+        <Flex 
+          justify="space-between" 
+          align="center" 
+          p={6} 
+          pb={4}
+          borderBottom="1px solid"
+          borderColor="whiteAlpha.100"
+        >
+          <Box>
+            <Heading 
+              fontSize="2xl"
+              display="flex"
+              alignItems="center"
+              gap={3}
+            >
+              <Icon as={FaSmile} color="blue.400" />
+              Share Your Feedback
+            </Heading>
+            <Text color="whiteAlpha.600" mt={1}>
+              Help us improve WoW ZoneGuessr
+            </Text>
+          </Box>
+          <IconButton
+            aria-label="Close modal"
+            icon={<FaTimes />}
+            onClick={onClose}
+            variant="ghost"
+            color="whiteAlpha.600"
+            _hover={{ color: "white", bg: "whiteAlpha.100" }}
+          />
+        </Flex>
+
+        <ModalBody p={6}>
+          <VStack spacing={8} align="stretch">
+            {/* Rating Section */}
+            <Box>
+              <Text mb={4} color="whiteAlpha.700">
+                How would you rate your experience?
+              </Text>
+              <Box 
+                position="relative" 
+                bg="whiteAlpha.50"
+                p={6}
+                borderRadius="xl"
+                overflow="hidden"
+              >
+                <Box
+                  position="absolute"
+                  top="-50%"
+                  left="-50%"
+                  width="200%"
+                  height="200%"
+                  background={`radial-gradient(circle, ${getRatingColor(hoveredRating || rating)}20 0%, transparent 70%)`}
+                  transition="all 0.3s"
+                />
+                <VStack spacing={4}>
+                  <HStack spacing={4} justify="center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <MotionBox
+                        key={star}
+                        whileHover={{ scale: 1.2 }}
+                        whileTap={{ scale: 0.9 }}
+                        cursor="pointer"
+                        onClick={() => setRating(star)}
+                        onMouseEnter={() => setHoveredRating(star)}
+                        onMouseLeave={() => setHoveredRating(0)}
+                      >
+                        <MotionIcon
+                          as={FaStar}
+                          w={8}
+                          h={8}
+                          color={(hoveredRating || rating) >= star ? getRatingColor(hoveredRating || rating) : "whiteAlpha.200"}
+                          transition={{ duration: 0.2 }}
+                        />
+                      </MotionBox>
+                    ))}
+                  </HStack>
+                  <AnimatePresence mode="wait">
+                    <MotionBox
+                      key={hoveredRating || rating}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      textAlign="center"
+                    >
+                      <Text 
+                        fontSize="lg" 
+                        fontWeight="bold"
+                        color={getRatingColor(hoveredRating || rating)}
+                      >
+                        {getRatingLabel(hoveredRating || rating)}
+                      </Text>
+                    </MotionBox>
+                  </AnimatePresence>
+                </VStack>
+              </Box>
+            </Box>
+
+            {/* Message Section */}
+            <Box>
+              <Text mb={4} color="whiteAlpha.700">
+                Share your thoughts with us
+              </Text>
               <Textarea
                 value={message}
                 onChange={handleMessageChange}
-                placeholder="Share your thoughts, suggestions, or report issues... (Please keep it family-friendly)"
+                placeholder="What's on your mind? We'd love to hear your feedback..."
                 minH="150px"
-                bg="whiteAlpha.100"
+                bg="whiteAlpha.50"
                 border="1px solid"
-                borderColor={showProfanityError ? "red.400" : "whiteAlpha.300"}
+                borderColor={showProfanityError ? "red.400" : "whiteAlpha.200"}
                 _hover={{
-                  borderColor: showProfanityError ? "red.400" : "blue.400"
+                  borderColor: showProfanityError ? "red.400" : "whiteAlpha.300"
                 }}
                 _focus={{
                   borderColor: showProfanityError ? "red.400" : "blue.400",
-                  boxShadow: showProfanityError ? "0 0 0 1px #F56565" : "0 0 0 1px #4299E1"
+                  boxShadow: showProfanityError 
+                    ? "0 0 0 1px var(--chakra-colors-red-400)"
+                    : "0 0 0 1px var(--chakra-colors-blue-400)"
                 }}
+                resize="vertical"
               />
               <AnimatePresence>
                 {showProfanityError && (
                   <MotionBox
-                    initial={{ opacity: 0, y: 5 }}
+                    initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    transition={{ duration: 0.2 }}
-                    mt={3}
+                    exit={{ opacity: 0, y: -10 }}
+                    mt={2}
+                    color="red.400"
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
                   >
-                    <Box
-                      bg="red.500"
-                      color="white"
-                      p={4}
-                      borderRadius="md"
-                      border="1px solid"
-                      borderColor="red.600"
-                      boxShadow="0 4px 12px rgba(229, 62, 62, 0.3)"
-                    >
-                      <Flex align="center" gap={3}>
-                        <Icon as={FaExclamationCircle} w={5} h={5} />
-                        <Text fontWeight="medium">
-                          Please remove inappropriate language before submitting.
-                        </Text>
-                      </Flex>
-                    </Box>
+                    <Icon as={FaExclamationCircle} />
+                    <Text fontSize="sm">
+                      Please keep your feedback family-friendly
+                    </Text>
                   </MotionBox>
                 )}
               </AnimatePresence>
             </Box>
           </VStack>
         </ModalBody>
-        <ModalFooter gap={3}>
+
+        <ModalFooter 
+          p={6} 
+          pt={4}
+          borderTop="1px solid"
+          borderColor="whiteAlpha.100"
+          gap={3}
+        >
           <Button
             variant="ghost"
             onClick={onClose}
-            leftIcon={<Icon as={FaTimes} />}
-            _hover={{
-              bg: "whiteAlpha.100"
-            }}
+            _hover={{ bg: "whiteAlpha.100" }}
           >
             Cancel
           </Button>
@@ -229,6 +311,7 @@ const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
             loadingText="Submitting..."
             leftIcon={<Icon as={FaPaperPlane} />}
             isDisabled={showProfanityError}
+            px={8}
           >
             Submit Feedback
           </Button>

@@ -5,28 +5,42 @@ import {
   Heading,
   Text,
   SimpleGrid,
-  Card,
-  CardBody,
-  Badge,
   Button,
   useDisclosure,
   Icon,
   Flex,
   HStack,
   VStack,
-  Select,
   Center,
-  Spinner
+  Spinner,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Tag,
+  TagLabel,
+  TagLeftIcon,
+  useBreakpointValue,
+  Portal,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaComments, FaStar, FaSort } from 'react-icons/fa'
+import { 
+  FaComments, 
+  FaStar, 
+  FaSort, 
+  FaFilter, 
+  FaClock, 
+  FaCheck, 
+  FaChevronDown,
+  FaLightbulb,
+  FaRegClock,
+} from 'react-icons/fa'
 import { getLatestFeedback } from '../firebaseFunctions'
 import FeedbackModal from '../components/FeedbackModal'
 import FeedbackDetailModal from '../components/FeedbackDetailModal'
 
 const MotionBox = motion(Box)
-const MotionCard = motion(Card)
-const MotionSelect = motion(Select)
+const MotionFlex = motion(Flex)
 
 interface Feedback {
   message: string
@@ -43,6 +57,7 @@ const FeedbackPage = () => {
   const { isOpen: isSubmitOpen, onOpen: onSubmitOpen, onClose: onSubmitClose } = useDisclosure()
   const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure()
   const [sortFilter, setSortFilter] = useState('newest')
+  const isMobile = useBreakpointValue({ base: true, md: false })
 
   const loadFeedback = async () => {
     setIsLoading(true)
@@ -99,170 +114,362 @@ const FeedbackPage = () => {
     onDetailOpen()
   }
 
+  const getTimeAgo = (date: Date) => {
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(minutes / 60)
+    const days = Math.floor(hours / 24)
+
+    if (days > 0) return `${days}d ago`
+    if (hours > 0) return `${hours}h ago`
+    if (minutes > 0) return `${minutes}m ago`
+    return 'Just now'
+  }
+
+  const filterOptions = [
+    { value: 'newest', label: 'Newest First', icon: FaSort },
+    { value: 'oldest', label: 'Oldest First', icon: FaSort },
+    { value: 'completed', label: 'Completed', icon: FaCheck },
+    { value: 'in-progress', label: 'In Progress', icon: FaRegClock },
+    { value: 'pending', label: 'Pending', icon: FaClock },
+    { value: 'answered', label: 'Answered', icon: FaComments },
+    { value: 'unanswered', label: 'Unanswered', icon: FaLightbulb },
+  ]
+
   return (
-    <Container maxW="container.xl" py={8}>
-      <MotionBox
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Flex 
-          justify="space-between" 
-          align={{ base: "start", md: "center" }}
-          direction={{ base: "column", md: "row" }}
-          gap={{ base: 4, md: 0 }}
-          mb={8}
+    <Container maxW="container.xl" py={{ base: 6, md: 12 }} px={{ base: 4, md: 8 }}>
+      {/* Background Gradient */}
+      <Box
+        position="fixed"
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bgGradient="radial-gradient(circle at top right, rgba(66, 153, 225, 0.1), transparent 60%), radial-gradient(circle at bottom left, rgba(159, 122, 234, 0.1), transparent 60%)"
+        zIndex={-1}
+        pointerEvents="none"
+      />
+
+      <VStack spacing={{ base: 8, md: 12 }} align="stretch">
+        {/* Header Section */}
+        <MotionBox
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          position="relative"
         >
-          <Heading 
-            size={{ base: "lg", md: "xl" }} 
-            display="flex" 
-            alignItems="center" 
-            gap={3}
+          <Box
+            position="absolute"
+            top="-100px"
+            right="-100px"
+            width="300px"
+            height="300px"
+            background="radial-gradient(circle, rgba(66, 153, 225, 0.1) 0%, transparent 70%)"
+            filter="blur(40px)"
+            pointerEvents="none"
+          />
+          
+          <Flex 
+            direction={{ base: "column", md: "row" }} 
+            justify="space-between" 
+            align={{ base: "stretch", md: "center" }}
+            gap={{ base: 6, md: 0 }}
+            position="relative"
           >
-            <Icon as={FaComments} color="blue.400" />
-            Community Feedback
-          </Heading>
-          <Button
-            onClick={onSubmitOpen}
-            colorScheme="blue"
-            size={{ base: "md", md: "lg" }}
-            width={{ base: "100%", md: "auto" }}
-            _hover={{
-              transform: 'translateY(-2px)',
-              boxShadow: '0 4px 12px rgba(66, 153, 225, 0.4)'
-            }}
-            transition="all 0.2s"
-          >
-            Submit Feedback
-          </Button>
-        </Flex>
+            <Box>
+              <Heading 
+                fontSize={{ base: "4xl", md: "6xl" }}
+                bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
+                bgClip="text"
+                fontWeight="extrabold"
+                letterSpacing="tight"
+                display="flex"
+                alignItems="center"
+                gap={4}
+              >
+                <Icon as={FaComments} />
+                Feedback
+              </Heading>
+              <Text 
+                mt={3} 
+                color="whiteAlpha.800" 
+                fontSize={{ base: "lg", md: "xl" }}
+                maxW="600px"
+                lineHeight="tall"
+              >
+                Share your thoughts and help shape the future of WoW ZoneGuessr
+              </Text>
+            </Box>
 
-        <Box maxW={{ base: "100%", md: "300px" }} mb={6}>
-          <MotionSelect
-            icon={<Icon as={FaSort} />}
-            value={sortFilter}
-            onChange={(e) => setSortFilter(e.target.value)}
-            bg="gray.900"
-            size={{ base: "md", md: "lg" }}
-            borderColor="whiteAlpha.300"
-            _hover={{
-              borderColor: "blue.400",
-              transform: "translateY(-1px)"
-            }}
-            _focus={{
-              borderColor: "blue.400",
-              boxShadow: "0 0 0 1px #4299E1"
-            }}
-            transition="all 0.2s"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <option style={{ backgroundColor: "#1A202C" }} value="newest">Newest First</option>
-            <option style={{ backgroundColor: "#1A202C" }} value="oldest">Oldest First</option>
-            <option style={{ backgroundColor: "#1A202C" }} value="completed">Completed</option>
-            <option style={{ backgroundColor: "#1A202C" }} value="in-progress">In Progress</option>
-            <option style={{ backgroundColor: "#1A202C" }} value="pending">Pending</option>
-            <option style={{ backgroundColor: "#1A202C" }} value="answered">Answered</option>
-            <option style={{ backgroundColor: "#1A202C" }} value="unanswered">Unanswered</option>
-          </MotionSelect>
-        </Box>
-
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <Center py={8} as={motion.div} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Spinner size="xl" color="blue.400" thickness="4px" speed="0.8s" />
-            </Center>
-          ) : feedback.length === 0 ? (
-            <Center py={8} as={motion.div} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Text color="whiteAlpha.700">No feedback found matching the selected filter.</Text>
-            </Center>
-          ) : (
-            <SimpleGrid 
-              columns={{ base: 1, md: 2, lg: 3 }} 
-              spacing={{ base: 3, md: 4 }}
-              as={motion.div}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {feedback.map((item, index) => (
-                <MotionCard
-                  key={index}
-                  bg="gray.900"
-                  borderColor="whiteAlpha.100"
-                  borderWidth="1px"
-                  borderRadius="lg"
-                  cursor="pointer"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  onClick={() => handleFeedbackClick(item)}
-                  _hover={{
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                    borderColor: "blue.400"
-                  }}
-                  whileHover={{ scale: 1.02 }}
+            <HStack spacing={4} position="relative">
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rightIcon={<FaChevronDown />}
+                  leftIcon={<FaFilter />}
+                  bg="whiteAlpha.50"
+                  backdropFilter="blur(10px)"
+                  _hover={{ bg: "whiteAlpha.100" }}
+                  _active={{ bg: "whiteAlpha.200" }}
+                  borderWidth={1}
+                  borderColor="whiteAlpha.200"
+                  fontSize="sm"
+                  px={6}
+                  h={12}
                 >
-                  <CardBody>
-                    <VStack align="stretch" spacing={3}>
-                      <Flex 
-                        justify="space-between" 
-                        align={{ base: "start", md: "center" }}
-                        direction={{ base: "column", md: "row" }}
-                        gap={{ base: 2, md: 0 }}
+                  Filter
+                </MenuButton>
+                <Portal>
+                  <MenuList
+                    bg="rgba(13, 16, 33, 0.95)"
+                    borderColor="whiteAlpha.200"
+                    boxShadow="dark-lg"
+                    backdropFilter="blur(10px)"
+                    py={2}
+                    overflow="hidden"
+                  >
+                    {filterOptions.map(option => (
+                      <MenuItem
+                        key={option.value}
+                        onClick={() => setSortFilter(option.value)}
+                        bg="transparent"
+                        _hover={{ bg: "whiteAlpha.200" }}
+                        icon={<Icon as={option.icon} />}
+                        isDisabled={sortFilter === option.value}
+                        h={12}
+                        px={4}
                       >
-                        <Badge
-                          colorScheme={getStatusColor(item.status)}
-                          px={2}
-                          py={1}
-                          borderRadius="full"
-                          alignSelf={{ base: "flex-start", md: "center" }}
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                </Portal>
+              </Menu>
+
+              <Button
+                onClick={onSubmitOpen}
+                colorScheme="blue"
+                size="lg"
+                px={8}
+                h={12}
+                fontWeight="bold"
+                bgGradient="linear(to-r, blue.500, purple.500)"
+                _hover={{
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 8px 20px -8px rgba(66, 153, 225, 0.5)',
+                  bgGradient: "linear(to-r, blue.600, purple.600)"
+                }}
+                _active={{
+                  transform: 'translateY(0)',
+                  bgGradient: "linear(to-r, blue.700, purple.700)"
+                }}
+                transition="all 0.2s"
+              >
+                Share Feedback
+              </Button>
+            </HStack>
+          </Flex>
+        </MotionBox>
+
+        {/* Active Filter Tag */}
+        {sortFilter !== 'newest' && (
+          <MotionBox
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Tag
+              size="lg"
+              variant="subtle"
+              colorScheme="blue"
+              borderRadius="full"
+              px={6}
+              py={3}
+              bg="whiteAlpha.100"
+              backdropFilter="blur(8px)"
+            >
+              <TagLeftIcon boxSize={5} as={filterOptions.find(o => o.value === sortFilter)?.icon} />
+              <TagLabel fontSize="md" fontWeight="medium">{filterOptions.find(o => o.value === sortFilter)?.label}</TagLabel>
+            </Tag>
+          </MotionBox>
+        )}
+
+        {/* Feedback Grid */}
+        <Box position="relative">
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <Center py={20}>
+                <Spinner 
+                  size="xl" 
+                  color="blue.400" 
+                  thickness="4px"
+                  speed="0.8s"
+                  emptyColor="whiteAlpha.100"
+                />
+              </Center>
+            ) : feedback.length === 0 ? (
+              <Center py={20} flexDirection="column" gap={6}>
+                <Icon as={FaComments} w={16} h={16} color="whiteAlpha.300" />
+                <Text color="whiteAlpha.700" fontSize="xl" textAlign="center">
+                  No feedback found matching the selected filter.
+                </Text>
+              </Center>
+            ) : (
+              <SimpleGrid 
+                columns={{ base: 1, md: 2, lg: 3 }} 
+                spacing={{ base: 6, md: 8 }}
+                as={motion.div}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {feedback.map((item, index) => (
+                  <MotionBox
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    onClick={() => handleFeedbackClick(item)}
+                    cursor="pointer"
+                    position="relative"
+                    role="group"
+                  >
+                    {/* Glass Card */}
+                    <Box
+                      bg="rgba(13, 16, 33, 0.7)"
+                      backdropFilter="blur(16px)"
+                      borderRadius="2xl"
+                      p={6}
+                      border="1px solid"
+                      borderColor="whiteAlpha.100"
+                      transition="all 0.3s"
+                      _hover={{
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
+                        borderColor: "blue.400",
+                      }}
+                      position="relative"
+                      overflow="hidden"
+                      height="280px"
+                      display="flex"
+                      flexDirection="column"
+                    >
+                      {/* Glow Effect */}
+                      <Box
+                        position="absolute"
+                        top="-50%"
+                        left="-50%"
+                        width="200%"
+                        height="200%"
+                        background="radial-gradient(circle, rgba(66, 153, 225, 0.15) 0%, transparent 70%)"
+                        opacity="0"
+                        transition="opacity 0.3s"
+                        _groupHover={{ opacity: "1" }}
+                        pointerEvents="none"
+                      />
+
+                      <VStack align="stretch" spacing={4} flex={1}>
+                        {/* Header */}
+                        <Flex justify="space-between" align="center" minH="24px">
+                          <HStack spacing={2}>
+                            <Tag
+                              size="sm"
+                              variant="subtle"
+                              colorScheme={getStatusColor(item.status)}
+                              borderRadius="full"
+                              px={3}
+                              py={1}
+                            >
+                              {item.status}
+                            </Tag>
+                            {item.response && (
+                              <Tag
+                                size="sm"
+                                variant="subtle"
+                                colorScheme="blue"
+                                borderRadius="full"
+                                px={3}
+                                py={1}
+                              >
+                                Answered
+                              </Tag>
+                            )}
+                          </HStack>
+                          <Text fontSize="sm" color="whiteAlpha.700" fontWeight="medium">
+                            {getTimeAgo(item.timestamp)}
+                          </Text>
+                        </Flex>
+
+                        {/* Rating */}
+                        <HStack spacing={1} minH="16px">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Icon
+                              key={i}
+                              as={FaStar}
+                              w={4}
+                              h={4}
+                              color={i < item.rating ? "yellow.400" : "whiteAlpha.200"}
+                              transition="color 0.2s"
+                              _groupHover={{
+                                color: i < item.rating ? "yellow.300" : "whiteAlpha.300"
+                              }}
+                            />
+                          ))}
+                        </HStack>
+
+                        {/* Message */}
+                        <Text
+                          color="white"
+                          fontSize="md"
+                          noOfLines={3}
+                          position="relative"
+                          zIndex={1}
+                          minH="72px"
+                          maxH="72px"
+                          overflow="hidden"
+                          lineHeight="tall"
                         >
-                          {item.status}
-                        </Badge>
-                        <Text 
-                          fontSize={{ base: "xs", md: "sm" }} 
-                          color="whiteAlpha.700"
-                        >
-                          {item.timestamp.toLocaleDateString()}
+                          {item.message}
                         </Text>
-                      </Flex>
-                      <HStack spacing={1}>
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Icon
-                            key={i}
-                            as={FaStar}
-                            w={{ base: 3, md: 4 }}
-                            h={{ base: 3, md: 4 }}
-                            color={i < item.rating ? "yellow.400" : "gray.500"}
-                          />
-                        ))}
-                      </HStack>
-                      <Text
-                        noOfLines={3}
-                        fontSize={{ base: "sm", md: "md" }}
-                        color="white"
-                      >
-                        {item.message}
-                      </Text>
-                      {item.response && (
-                        <Badge 
-                          colorScheme="blue" 
-                          alignSelf="flex-start"
-                          fontSize={{ base: "xs", md: "sm" }}
-                        >
-                          Has Response
-                        </Badge>
-                      )}
-                    </VStack>
-                  </CardBody>
-                </MotionCard>
-              ))}
-            </SimpleGrid>
-          )}
-        </AnimatePresence>
-      </MotionBox>
+
+                        {/* Response Preview */}
+                        {item.response && (
+                          <Box
+                            bg="whiteAlpha.100"
+                            p={4}
+                            borderRadius="xl"
+                            borderLeft="3px solid"
+                            borderColor="blue.400"
+                            minH="64px"
+                            maxH="64px"
+                            overflow="hidden"
+                            transition="all 0.2s"
+                            _groupHover={{
+                              bg: "whiteAlpha.200",
+                              borderColor: "blue.300"
+                            }}
+                          >
+                            <Text
+                              fontSize="sm"
+                              color="whiteAlpha.900"
+                              noOfLines={2}
+                              lineHeight="tall"
+                            >
+                              {item.response}
+                            </Text>
+                          </Box>
+                        )}
+                      </VStack>
+                    </Box>
+                  </MotionBox>
+                ))}
+              </SimpleGrid>
+            )}
+          </AnimatePresence>
+        </Box>
+      </VStack>
 
       <FeedbackModal isOpen={isSubmitOpen} onClose={onSubmitClose} />
       {selectedFeedback && (
