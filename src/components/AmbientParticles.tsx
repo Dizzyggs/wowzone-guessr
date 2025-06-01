@@ -1,6 +1,6 @@
-
+import { useEffect, useRef, useCallback } from 'react'
+import type { FC } from 'react'
 import { Box } from '@chakra-ui/react'
-import { useRef, useEffect } from 'react'
 
 interface Particle {
   x: number
@@ -17,52 +17,54 @@ interface AmbientParticlesProps {
   color: string
 }
 
-const AmbientParticles = ({ color }: AmbientParticlesProps) => {
+const AmbientParticles: FC<AmbientParticlesProps> = ({ color }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
   const animationFrameRef = useRef<number>()
 
+  // Convert hex to rgb
+  const hexToRgb = useCallback((hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 49, g: 130, b: 206 } // Default to #3182ce
+  }, [])
+
+  // Create particles function
+  const createParticles = useCallback((width: number, height: number, rgbString: string) => {
+    const particles: Particle[] = []
+    const numParticles = Math.min(Math.floor((width * height) / 20000), 100)
+
+    for (let i = 0; i < numParticles; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 2 + 1,
+        speedX: (Math.random() - 0.5) * 0.5,
+        speedY: (Math.random() - 0.5) * 0.5,
+        opacity: Math.random() * 0.4 + 0.1,
+        color: rgbString,
+        glowSize: Math.random() * 10 + 5
+      })
+    }
+
+    return particles
+  }, [])
+
+  // Animation setup and cleanup
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
-
-    // Convert hex to rgb
-    const hexToRgb = (hex: string) => {
-      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-      return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      } : { r: 49, g: 130, b: 206 } // Default to #3182ce
-    }
+    if (!canvas) return () => {}
 
     const rgb = hexToRgb(color)
     const rgbString = `${rgb.r}, ${rgb.g}, ${rgb.b}`
 
-    const createParticles = (width: number, height: number) => {
-      const particles: Particle[] = []
-      const numParticles = Math.min(Math.floor((width * height) / 20000), 100)
-
-      for (let i = 0; i < numParticles; i++) {
-        particles.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          size: Math.random() * 2 + 1,
-          speedX: (Math.random() - 0.5) * 0.5,
-          speedY: (Math.random() - 0.5) * 0.5,
-          opacity: Math.random() * 0.4 + 0.1,
-          color: rgbString,
-          glowSize: Math.random() * 10 + 5
-        })
-      }
-
-      return particles
-    }
-
     const handleResize = () => {
       canvas.width = window.innerWidth
       canvas.height = window.innerHeight
-      particlesRef.current = createParticles(canvas.width, canvas.height)
+      particlesRef.current = createParticles(canvas.width, canvas.height, rgbString)
     }
 
     const animate = () => {
@@ -111,13 +113,14 @@ const AmbientParticles = ({ color }: AmbientParticlesProps) => {
     window.addEventListener('resize', handleResize)
     animate()
 
+    // Cleanup function
     return () => {
       window.removeEventListener('resize', handleResize)
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [color])
+  }, [color, hexToRgb, createParticles])
 
   return (
     <Box
