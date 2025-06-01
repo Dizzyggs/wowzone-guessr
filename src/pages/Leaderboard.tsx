@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaTrophy, FaGamepad, FaChevronLeft, FaChevronRight, FaAngleDoubleLeft, FaAngleDoubleRight, FaMedal, FaClock, FaCheck, FaSearch } from 'react-icons/fa'
 import { getTopScores } from '../firebaseFunctions'
+import React from 'react'
 
 const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
@@ -110,12 +111,13 @@ const getMedalColor = (index: number): string => {
   }
 }
 
-const LeaderboardCard = motion(({ entry, index, isEvenRow }: { entry: LeaderboardEntry, index: number, isEvenRow: boolean }) => {
+const LeaderboardCard = motion(React.forwardRef<HTMLDivElement, { entry: LeaderboardEntry, index: number, isEvenRow: boolean }>(({ entry, index, isEvenRow }, ref) => {
   const isMobile = useBreakpointValue({ base: true, md: false })
   const isTopThree = index <= 2
 
   return (
     <MotionBox
+      ref={ref}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -225,7 +227,7 @@ const LeaderboardCard = motion(({ entry, index, isEvenRow }: { entry: Leaderboar
       </Grid>
     </MotionBox>
   )
-})
+}))
 
 const Leaderboard = () => {
   const [selectedMode, setSelectedMode] = useState<'easy' | 'hard'>('easy')

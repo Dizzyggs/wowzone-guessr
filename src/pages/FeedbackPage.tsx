@@ -24,6 +24,7 @@ import {
   Portal,
 } from '@chakra-ui/react'
 import { motion, AnimatePresence } from 'framer-motion'
+import React from 'react'
 import { 
   FaComments, 
   FaStar, 
@@ -39,8 +40,8 @@ import { getLatestFeedback } from '../firebaseFunctions'
 import FeedbackModal from '../components/FeedbackModal'
 import FeedbackDetailModal from '../components/FeedbackDetailModal'
 
-const MotionBox = motion(Box)
-const MotionFlex = motion(Flex)
+const MotionBox = motion(React.forwardRef<HTMLDivElement, any>((props, ref) => <Box ref={ref} {...props} />))
+const MotionFlex = motion(React.forwardRef<HTMLDivElement, any>((props, ref) => <Flex ref={ref} {...props} />))
 
 interface Feedback {
   message: string
