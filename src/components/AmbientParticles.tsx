@@ -20,7 +20,7 @@ interface AmbientParticlesProps {
 const AmbientParticles: FC<AmbientParticlesProps> = ({ color }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
-  const animationFrameRef = useRef<number>()
+  const animationFrameRef = useRef<number | undefined>(undefined)
 
   // Convert hex to rgb
   const hexToRgb = useCallback((hex: string) => {
@@ -54,9 +54,9 @@ const AmbientParticles: FC<AmbientParticlesProps> = ({ color }) => {
   }, [])
 
   // Animation setup and cleanup
-  useEffect(() => {
+  useEffect((): (() => void) => {
     const canvas = canvasRef.current
-    if (!canvas) return () => {}
+    if (!canvas) return () => undefined
 
     const rgb = hexToRgb(color)
     const rgbString = `${rgb.r}, ${rgb.g}, ${rgb.b}`

@@ -10,10 +10,10 @@ import {
   HStack, 
   useDisclosure,
   keyframes,
-  useBreakpointValue
+  // useBreakpointValue
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
-import { FaGamepad, FaMapMarkedAlt, FaTrophy, FaCompass, FaQuestionCircle } from 'react-icons/fa'
+import { FaGamepad, FaTrophy, FaCompass, FaQuestionCircle } from 'react-icons/fa'
 import HeroSlideshow from '../components/HeroSlideshow'
 import { HowToPlayGuide } from '../components/HowToPlayGuide'
 import { motion } from 'framer-motion'
@@ -22,11 +22,7 @@ const MotionBox = motion(Box)
 const MotionFlex = motion(Flex)
 const MotionText = motion(Text)
 
-const floatAnimation = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-`
+
 
 const glowAnimation = keyframes`
   0% { box-shadow: 0 0 20px rgba(66, 153, 225, 0.4); }
@@ -37,7 +33,7 @@ const glowAnimation = keyframes`
 const Home = () => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
-  const isMobile = useBreakpointValue({ base: true, lg: false })
+  // const isMobile = useBreakpointValue({ base: true, lg: false })
 
   return (
     <Box 

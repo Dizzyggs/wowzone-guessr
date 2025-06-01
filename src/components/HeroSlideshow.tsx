@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { preloadImagePaths } from '../utils/imagePreloader'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 
-const MotionBox = motion(Box)
+// const MotionBox = motion(Box)
 const MotionImage = motion(Image)
 
 const slides = [

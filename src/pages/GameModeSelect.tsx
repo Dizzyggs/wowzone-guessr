@@ -6,8 +6,8 @@ import {
   VStack,
   SimpleGrid,
   Icon,
-  useBreakpointValue,
-  keyframes,
+  // useBreakpointValue,
+  // keyframes,
   Button,
 } from '@chakra-ui/react'
 import { motion } from 'framer-motion'
@@ -18,21 +18,21 @@ const MotionBox = motion(Box)
 const MotionHeading = motion(Heading)
 const MotionText = motion(Text)
 
-const pulseKeyframes = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-`
+// const pulseKeyframes = keyframes`
+//   0% { transform: scale(1); }
+//   50% { transform: scale(1.05); }
+//   100% { transform: scale(1); }
+// `
 
-const floatKeyframes = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-`
+// const floatKeyframes = keyframes`
+//   0% { transform: translateY(0px); }
+//   50% { transform: translateY(-10px); }
+//   100% { transform: translateY(0px); }
+// `
 
 const GameModeSelect = () => {
   const navigate = useNavigate()
-  const isMobile = useBreakpointValue({ base: true, md: false })
+  // const isMobile = useBreakpointValue({ base: true, md: false })
 
   const handleEasyMode = () => {
     navigate('/play/easy')
