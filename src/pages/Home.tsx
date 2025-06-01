@@ -10,7 +10,7 @@ import {
   HStack, 
   useDisclosure,
   keyframes,
-  // useBreakpointValue
+  useBreakpointValue
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
 import { FaGamepad, FaTrophy, FaCompass, FaQuestionCircle } from 'react-icons/fa'
@@ -33,7 +33,7 @@ const glowAnimation = keyframes`
 const Home = () => {
   const navigate = useNavigate()
   const { isOpen, onOpen, onClose } = useDisclosure()
-  // const isMobile = useBreakpointValue({ base: true, lg: false })
+  const isMobile = useBreakpointValue({ base: true, lg: false })
 
   return (
     <Box 
@@ -53,12 +53,12 @@ const Home = () => {
         zIndex={0}
       />
 
-      <Container maxW="container.xl" py={{ base: 10, md: 20 }} position="relative" zIndex={2}>
+      <Container maxW="container.xl" py={{ base: 6, md: 20 }} position="relative" zIndex={2}>
         <MotionFlex
           direction={{ base: 'column', lg: 'row' }}
           align="center"
           justify="space-between"
-          gap={{ base: 10, lg: 20 }}
+          gap={{ base: 6, lg: 20 }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -66,9 +66,10 @@ const Home = () => {
           {/* Left Content */}
           <VStack 
             align={{ base: "center", lg: "flex-start" }}
-            spacing={{ base: 6, lg: 8 }}
+            spacing={{ base: 4, lg: 8 }}
             flex={1}
             textAlign={{ base: "center", lg: "left" }}
+            px={{ base: 4, md: 0 }}
           >
             <MotionBox
               initial={{ opacity: 0, scale: 0.9 }}
@@ -77,13 +78,13 @@ const Home = () => {
             >
               <Heading
                 as="h1"
-                fontSize={{ base: "4xl", md: "5xl", lg: "6xl" }}
+                fontSize={{ base: "3xl", sm: "4xl", md: "5xl", lg: "6xl" }}
                 bgGradient="linear(to-r, blue.400, purple.500, pink.500)"
                 bgClip="text"
                 fontWeight="extrabold"
                 letterSpacing="tight"
                 lineHeight="1.2"
-                mb={4}
+                mb={{ base: 2, md: 4 }}
               >
                 Master Your
                 <br />
@@ -92,29 +93,30 @@ const Home = () => {
             </MotionBox>
 
             <MotionText
-              fontSize={{ base: "lg", md: "xl" }}
+              fontSize={{ base: "md", sm: "lg", md: "xl" }}
               color="gray.300"
               maxW="600px"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
+              px={{ base: 2, md: 0 }}
             >
               Put your knowledge to the test through World of Warcraft's most iconic locations. Test your expertise, compete with others, and become a true master of Azeroth's landscapes.
             </MotionText>
 
-            <VStack align={{ base: "center", lg: "stretch" }} spacing={6} width="full">
+            <VStack align={{ base: "stretch", lg: "stretch" }} spacing={{ base: 3, md: 6 }} width="full" px={isMobile ? 4: 0}>
               <MotionBox
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.7 }}
               >
                 <HStack 
-                  spacing={4} 
+                  spacing={{ base: 3, md: 4 }} 
                   color="gray.300" 
-                  justify={{ base: "center", lg: "flex-start" }}
+                  justify={{ base: "flex-start", lg: "flex-start" }}
                   bg="whiteAlpha.100"
                   backdropFilter="blur(8px)"
-                  p={4}
+                  p={{ base: 3, md: 4 }}
                   borderRadius="xl"
                   borderWidth="1px"
                   borderColor="whiteAlpha.200"
@@ -125,8 +127,8 @@ const Home = () => {
                     boxShadow: "xl"
                   }}
                 >
-                  <Icon as={FaCompass} w={6} h={6} color="blue.400" />
-                  <Text fontSize={{ base: "md", xl: "lg" }}>
+                  <Icon as={FaCompass} w={{ base: 5, md: 6 }} h={{ base: 5, md: 6 }} color="blue.400" />
+                  <Text fontSize={{ base: "sm", sm: "md", xl: "lg" }}>
                     Challenge yourself with locations from Classic and TBC
                   </Text>
                 </HStack>
@@ -138,12 +140,12 @@ const Home = () => {
                 transition={{ duration: 0.5, delay: 0.9 }}
               >
                 <HStack 
-                  spacing={4} 
+                  spacing={{ base: 3, md: 4 }} 
                   color="gray.300" 
-                  justify={{ base: "center", lg: "flex-start" }}
+                  justify={{ base: "flex-start", lg: "flex-start" }}
                   bg="whiteAlpha.100"
                   backdropFilter="blur(8px)"
-                  p={4}
+                  p={{ base: 3, md: 4 }}
                   borderRadius="xl"
                   borderWidth="1px"
                   borderColor="whiteAlpha.200"
@@ -154,8 +156,8 @@ const Home = () => {
                     boxShadow: "xl"
                   }}
                 >
-                  <Icon as={FaTrophy} w={6} h={6} color="purple.500" />
-                  <Text fontSize={{ base: "md", xl: "lg" }}>
+                  <Icon as={FaTrophy} w={{ base: 5, md: 6 }} h={{ base: 5, md: 6 }} color="purple.500" />
+                  <Text fontSize={{ base: "sm", sm: "md", xl: "lg" }}>
                     Climb the global rankings and prove your mastery
                   </Text>
                 </HStack>
@@ -166,16 +168,19 @@ const Home = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 1.1 }}
+              w={{ base: "full", md: "auto" }}
             >
-              <HStack spacing={4}>
+              <HStack spacing={4} justify={{ base: "stretch", md: "flex-start" }} w="full" border="1px solid red">
                 <Button
-                  size={{ base: "lg", md: "xl" }}
-                  px={8}
-                  py={7}
+                  size={{ base: "md", md: "lg" }}
+                  px={{ base: 6, md: 8 }}
+                  py={{ base: 6, md: 7 }}
                   colorScheme="blue"
                   onClick={() => navigate('/play')}
                   position="relative"
                   overflow="hidden"
+                  flex={{ base: 1, md: "initial" }}
+                  fontSize={{ base: "md", md: "lg" }}
                   _before={{
                     content: '""',
                     position: "absolute",
@@ -196,7 +201,7 @@ const Home = () => {
                   }}
                   animation={`${glowAnimation} 2s infinite`}
                 >
-                  <Icon as={FaGamepad} w={6} h={6} mr={2} />
+                  <Icon as={FaGamepad} w={{ base: 5, md: 6 }} h={{ base: 5, md: 6 }} mr={2} />
                   Start Playing
                 </Button>
                 <Button

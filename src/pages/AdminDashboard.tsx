@@ -43,7 +43,9 @@ import {
   publishChangelog,
   respondToFeedback,
   updateDraftChangelog,
-  deleteFeedback
+  deleteFeedback,
+  getChangelogs,
+  updatePublishedChangelog
 } from '../firebaseFunctions'
 import { FaChevronLeft, FaChevronRight, FaReply, FaEdit, FaTrash } from 'react-icons/fa'
 import Layout from '../components/Layout'
@@ -75,6 +77,7 @@ interface Changelog {
   date: Date
   likes?: number
   isDraft?: boolean
+  lastModified?: Date
 }
 
 export default function AdminDashboard() {
@@ -84,6 +87,11 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [draftChangelogs, setDraftChangelogs] = useState<Changelog[]>([])
+  const [publishedChangelogs, setPublishedChangelogs] = useState<Changelog[]>([])
+  const [isDraft, setIsDraft] = useState(false)
+  const [isLoadingDrafts, setIsLoadingDrafts] = useState(false)
+  const [isLoadingPublished, setIsLoadingPublished] = useState(false)
   const navigate = useNavigate()
   const toast = useToast()
   
@@ -108,10 +116,6 @@ export default function AdminDashboard() {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null)
   const [response, setResponse] = useState('')
   const [status, setStatus] = useState<'new' | 'in-progress' | 'completed'>('in-progress')
-
-  const [draftChangelogs, setDraftChangelogs] = useState<Changelog[]>([])
-  const [isDraft, setIsDraft] = useState(false)
-  const [isLoadingDrafts, setIsLoadingDrafts] = useState(false)
 
   // Add state for editing drafts
   const [editingDraft, setEditingDraft] = useState<Changelog | null>(null)
@@ -159,6 +163,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (sessionStorage.getItem('isAdminAuthenticated')) {
       loadDrafts()
+      loadPublishedChangelogs()
     }
   }, [])
 
@@ -179,6 +184,23 @@ export default function AdminDashboard() {
     }
   }
 
+  const loadPublishedChangelogs = async () => {
+    setIsLoadingPublished(true)
+    try {
+      const changelogs = await getChangelogs()
+      setPublishedChangelogs(changelogs)
+    } catch (error) {
+      console.error('Error loading published changelogs:', error)
+      toast({
+        title: 'Error loading published changelogs',
+        status: 'error',
+        duration: 3000,
+      })
+    } finally {
+      setIsLoadingPublished(false)
+    }
+  }
+
   const handleEditDraft = (draft: Changelog) => {
     setEditingDraft(draft)
     setChangelogData({
@@ -189,6 +211,19 @@ export default function AdminDashboard() {
       removed: draft.removed || ''
     })
     setIsDraft(true)
+    onChangelogOpen()
+  }
+
+  const handleEditPublished = (changelog: Changelog) => {
+    setEditingDraft(changelog)
+    setChangelogData({
+      title: changelog.title,
+      type: changelog.type,
+      added: changelog.added || '',
+      changed: changelog.changed || '',
+      removed: changelog.removed || ''
+    })
+    setIsDraft(false)
     onChangelogOpen()
   }
 
@@ -207,17 +242,31 @@ export default function AdminDashboard() {
     let result
 
     if (editingDraft) {
-      // Update existing draft
-      result = await updateDraftChangelog(
-        editingDraft.id!,
-        {
-          title: changelogData.title,
-          type: changelogData.type,
-          added: changelogData.added || undefined,
-          changed: changelogData.changed || undefined,
-          removed: changelogData.removed || undefined
-        }
-      )
+      if (editingDraft.isDraft) {
+        // Update existing draft
+        result = await updateDraftChangelog(
+          editingDraft.id!,
+          {
+            title: changelogData.title,
+            type: changelogData.type,
+            added: changelogData.added || undefined,
+            changed: changelogData.changed || undefined,
+            removed: changelogData.removed || undefined
+          }
+        )
+      } else {
+        // Update published changelog
+        result = await updatePublishedChangelog(
+          editingDraft.id!,
+          {
+            title: changelogData.title,
+            type: changelogData.type,
+            added: changelogData.added || undefined,
+            changed: changelogData.changed || undefined,
+            removed: changelogData.removed || undefined
+          }
+        )
+      }
     } else {
       // Create new changelog/draft
       const submitFunction = isDraft ? submitChangelogDraft : submitChangelog
@@ -244,9 +293,12 @@ export default function AdminDashboard() {
       setEditingDraft(null)
       onChangelogClose()
       
-      // Refresh drafts list
-      if (isDraft || editingDraft) {
+      // Refresh lists
+      if (isDraft || (editingDraft && editingDraft.isDraft)) {
         await loadDrafts()
+      }
+      if (!isDraft || (editingDraft && !editingDraft.isDraft)) {
+        await loadPublishedChangelogs()
       }
     }
     setIsSubmitting(false)
@@ -381,6 +433,7 @@ export default function AdminDashboard() {
               <TabList>
                 <Tab>Feedback</Tab>
                 <Tab>Draft Changelogs</Tab>
+                <Tab>Published Changelogs</Tab>
               </TabList>
 
               <TabPanels>
@@ -517,6 +570,60 @@ export default function AdminDashboard() {
                               )}
                               <Text color="gray.400" fontSize="sm">
                                 Created: {draft.date.toLocaleDateString()}
+                              </Text>
+                            </VStack>
+                          </Box>
+                        ))
+                      )}
+                    </VStack>
+                  </Box>
+                </TabPanel>
+
+                <TabPanel p={0} pt={4}>
+                  {/* Published Changelogs Section */}
+                  <Box bg="rgba(10, 15, 28, 0.95)" shadow="md" borderRadius="lg" p={6} border="2px solid" borderColor="blue.400">
+                    <Heading size="md" mb={4} color="white">Published Changelogs</Heading>
+                    <VStack spacing={4} align="stretch">
+                      {isLoadingPublished ? (
+                        <Center py={8}>
+                          <Spinner />
+                        </Center>
+                      ) : publishedChangelogs.length === 0 ? (
+                        <Center py={8}>
+                          <Text color="gray.400">No published changelogs.</Text>
+                        </Center>
+                      ) : (
+                        publishedChangelogs.map((changelog) => (
+                          <Box key={changelog.id} p={4} bg="whiteAlpha.100" borderRadius="md" borderWidth={1} borderColor="whiteAlpha.200">
+                            <VStack align="stretch" spacing={3}>
+                              <Flex justify="space-between" align="center">
+                                <HStack>
+                                  <Heading size="sm" color="white">{changelog.title}</Heading>
+                                  <Badge colorScheme={changelog.type === 'feature' ? 'green' : changelog.type === 'bugfix' ? 'red' : 'blue'}>
+                                    {changelog.type}
+                                  </Badge>
+                                </HStack>
+                                <IconButton
+                                  aria-label="Edit changelog"
+                                  icon={<FaEdit />}
+                                  size="sm"
+                                  variant="ghost"
+                                  colorScheme="blue"
+                                  onClick={() => handleEditPublished(changelog)}
+                                />
+                              </Flex>
+                              {changelog.added && (
+                                <Text color="green.200">Added: {changelog.added}</Text>
+                              )}
+                              {changelog.changed && (
+                                <Text color="blue.200">Changed: {changelog.changed}</Text>
+                              )}
+                              {changelog.removed && (
+                                <Text color="red.200">Removed: {changelog.removed}</Text>
+                              )}
+                              <Text color="gray.400" fontSize="sm">
+                                Published: {changelog.date.toLocaleDateString()}
+                                {changelog.lastModified && ` (Last modified: ${new Date(changelog.lastModified).toLocaleDateString()})`}
                               </Text>
                             </VStack>
                           </Box>

@@ -519,7 +519,41 @@ export const updateDraftChangelog = async (
   }
 }
 
+export const updatePublishedChangelog = async (
+  changelogId: string,
+  data: {
+    title: string,
+    type: 'feature' | 'bugfix' | 'improvement',
+    added?: string,
+    changed?: string,
+    removed?: string
+  }
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const changelogRef = doc(db, 'changelogs', changelogId)
+    
+    // Update the document with new data
+    await updateDoc(changelogRef, {
+      title: data.title,
+      type: data.type,
+      ...(data.added !== undefined && { added: data.added }),
+      ...(data.changed !== undefined && { changed: data.changed }),
+      ...(data.removed !== undefined && { removed: data.removed }),
+      lastModified: new Date() // Add a lastModified timestamp
+    })
 
+    return {
+      success: true,
+      message: 'Changelog updated successfully'
+    }
+  } catch (error) {
+    console.error('Error updating published changelog:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error updating changelog'
+    }
+  }
+}
 
 export const deleteFeedback = async (feedbackId: string): Promise<{ success: boolean, message: string }> => {
   try {

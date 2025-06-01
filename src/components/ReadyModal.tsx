@@ -104,18 +104,20 @@ const ReadyModal = ({ isOpen, onClose, onStart }: ReadyModalProps) => {
       />
       <ModalContent
         bg="rgba(13, 19, 35, 0.97)"
-        borderRadius="3xl"
+        borderRadius={{ base: "xl", md: "3xl" }}
         border="2px solid"
         borderColor="blue.400"
         boxShadow={`0 0 40px ${blue400}40`}
         overflow="hidden"
         position="relative"
-        py={8}
+        py={{ base: 4, md: 8 }}
+        mx={{ base: 4, md: 0 }}
+        maxW={{ base: "90vw", md: "xl" }}
       >
         <AnimatePresence mode="wait">
           {!isCountingDown ? (
-            <ModalBody key="ready" py={8}>
-              <VStack spacing={8}>
+            <ModalBody key="ready" py={{ base: 4, md: 8 }}>
+              <VStack spacing={{ base: 4, md: 8 }}>
                 <MotionBox
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -124,8 +126,8 @@ const ReadyModal = ({ isOpen, onClose, onStart }: ReadyModalProps) => {
                   <Icon 
                     as={FaMapMarkedAlt} 
                     color="blue.400"
-                    w={20} 
-                    h={20}
+                    w={{ base: 12, md: 20 }} 
+                    h={{ base: 12, md: 20 }}
                     animation={`${floatKeyframes} 3s ease-in-out infinite`}
                   />
                 </MotionBox>
@@ -134,7 +136,7 @@ const ReadyModal = ({ isOpen, onClose, onStart }: ReadyModalProps) => {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  fontSize="4xl"
+                  fontSize={{ base: "2xl", md: "4xl" }}
                   fontWeight="bold"
                   color="white"
                   textAlign="center"
@@ -148,7 +150,7 @@ const ReadyModal = ({ isOpen, onClose, onStart }: ReadyModalProps) => {
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
-                  gap={8}
+                  gap={{ base: 3, md: 8 }}
                   justify="center"
                   wrap="wrap"
                 >
@@ -160,7 +162,7 @@ const ReadyModal = ({ isOpen, onClose, onStart }: ReadyModalProps) => {
                     <Box
                       key={index}
                       textAlign="center"
-                      p={4}
+                      p={{ base: 2, md: 4 }}
                       borderRadius="xl"
                       bg="whiteAlpha.100"
                       backdropFilter="blur(8px)"
@@ -172,12 +174,12 @@ const ReadyModal = ({ isOpen, onClose, onStart }: ReadyModalProps) => {
                     >
                       <Icon 
                         as={item.icon} 
-                        w={8} 
-                        h={8} 
+                        w={{ base: 6, md: 8 }} 
+                        h={{ base: 6, md: 8 }} 
                         color={item.color} 
-                        mb={3}
+                        mb={{ base: 2, md: 3 }}
                       />
-                      <Text color="gray.200" fontSize="sm" fontWeight="medium">
+                      <Text color="gray.200" fontSize={{ base: "xs", md: "sm" }} fontWeight="medium">
                         {item.text}
                       </Text>
                     </Box>
@@ -189,15 +191,15 @@ const ReadyModal = ({ isOpen, onClose, onStart }: ReadyModalProps) => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.6 }}
                   direction="column"
-                  gap={4}
+                  gap={{ base: 2, md: 4 }}
                   w="full"
-                  px={8}
-                  mt={4}
+                  px={{ base: 4, md: 8 }}
+                  mt={{ base: 2, md: 4 }}
                 >
                   <Button
                     leftIcon={<FaPlay />}
                     colorScheme="blue"
-                    size="lg"
+                    size={{ base: "md", md: "lg" }}
                     h="60px"
                     fontSize="xl"
                     onClick={handleStart}
