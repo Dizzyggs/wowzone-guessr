@@ -49,6 +49,8 @@ const Layout = ({ children }: LayoutProps) => {
           backgroundImage={`url(${isGamePage ? overlay2 : (currentOverlay === 1 ? overlay1 : overlay2)})`}
           backgroundSize="cover"
           backgroundPosition="center"
+          backgroundColor="transparent"
+          backgroundRepeat="no-repeat"
           opacity={0.15}
           mixBlendMode="soft-light"
           pointerEvents="none"

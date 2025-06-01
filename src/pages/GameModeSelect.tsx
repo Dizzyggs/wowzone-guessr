@@ -10,9 +10,9 @@ import {
   keyframes,
   Button,
 } from '@chakra-ui/react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { FaQuestionCircle, FaKeyboard, FaTrophy, FaGamepad, FaStar, FaBolt, FaHourglassStart } from 'react-icons/fa'
+import { FaKeyboard, FaTrophy, FaGamepad, FaStar, FaBolt, FaHourglassStart } from 'react-icons/fa'
 
 const MotionBox = motion(Box)
 const MotionHeading = motion(Heading)

@@ -449,9 +449,10 @@ const Game = () => {
             pointerEvents="none"
             opacity={0.4}
             style={{
-              background: `url(${gameState.currentImage})`,
+              backgroundImage: `url(${gameState.currentImage})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
               filter: 'blur(140px) brightness(0.3)',
               transition: 'all 0.5s ease-in-out',
             }}
