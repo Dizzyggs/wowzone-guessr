@@ -25,7 +25,7 @@ import { getTopScores } from '../firebaseFunctions'
 import React from 'react'
 
 const MotionBox = motion(Box)
-const MotionFlex = motion(Flex)
+// const MotionFlex = motion(Flex)
 
 // Add custom scrollbar styles
 const scrollbarStyles = {

@@ -41,7 +41,7 @@ import FeedbackModal from '../components/FeedbackModal'
 import FeedbackDetailModal from '../components/FeedbackDetailModal'
 
 const MotionBox = motion(React.forwardRef<HTMLDivElement, any>((props, ref) => <Box ref={ref} {...props} />))
-const MotionFlex = motion(React.forwardRef<HTMLDivElement, any>((props, ref) => <Flex ref={ref} {...props} />))
+// const MotionFlex = motion(React.forwardRef<HTMLDivElement, any>((props, ref) => <Flex ref={ref} {...props} />))
 
 interface Feedback {
   message: string
@@ -58,7 +58,7 @@ const FeedbackPage = () => {
   const { isOpen: isSubmitOpen, onOpen: onSubmitOpen, onClose: onSubmitClose } = useDisclosure()
   const { isOpen: isDetailOpen, onOpen: onDetailOpen, onClose: onDetailClose } = useDisclosure()
   const [sortFilter, setSortFilter] = useState('newest')
-  const isMobile = useBreakpointValue({ base: true, md: false })
+  // const isMobile = useBreakpointValue({ base: true, md: false })
 
   const loadFeedback = async () => {
     setIsLoading(true)
