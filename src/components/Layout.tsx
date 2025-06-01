@@ -38,7 +38,7 @@ const Layout = ({ children }: LayoutProps) => {
       className='Layout-Container'
       bg="#0A0F1C" // Dark base color
     >
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false} mode="sync">
         <MotionBox
           key={currentOverlay}
           position="fixed"
@@ -56,12 +56,34 @@ const Layout = ({ children }: LayoutProps) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.15 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.0 }}
+          transition={{ duration: 0.3 }}
         />
       </AnimatePresence>
       <Box position="relative" zIndex={1}>
         <Navbar />
-        <Container maxW="container.xl" py={8}>
+        {/* Top Gradient Fade */}
+        <Box
+          position="fixed"
+          top={0}
+          left={0}
+          right={0}
+          height="120px"
+          pointerEvents="none"
+          bgGradient="linear(to-b, #0A0F1C, transparent)"
+          zIndex={1}
+        />
+        {/* Bottom Gradient Fade */}
+        <Box
+          position="fixed"
+          bottom={0}
+          left={0}
+          right={0}
+          height="120px"
+          pointerEvents="none"
+          bgGradient="linear(to-t, #0A0F1C, transparent)"
+          zIndex={1}
+        />
+        <Container maxW="container.xl" py={location.pathname === '/' ? 0 : 8}>
           <Flex direction="column" gap={8}>
             {children || <Outlet />}
           </Flex>

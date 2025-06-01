@@ -9,7 +9,8 @@ import {
   limit,
   doc,
   updateDoc,
-  increment
+  increment,
+  deleteDoc
 } from 'firebase/firestore'
 
 interface LeaderboardEntry {
@@ -514,6 +515,26 @@ export const updateDraftChangelog = async (
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Error updating draft. Please try again.'
+    }
+  }
+}
+
+
+
+export const deleteFeedback = async (feedbackId: string): Promise<{ success: boolean, message: string }> => {
+  try {
+    const feedbackRef = doc(db, 'feedback', feedbackId)
+    await deleteDoc(feedbackRef)
+    
+    return {
+      success: true,
+      message: 'Feedback deleted successfully'
+    }
+  } catch (error) {
+    console.error('Error deleting feedback:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error deleting feedback'
     }
   }
 }

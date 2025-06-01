@@ -42,10 +42,12 @@ import {
   getDraftChangelogs,
   publishChangelog,
   respondToFeedback,
-  updateDraftChangelog
+  updateDraftChangelog,
+  deleteFeedback
 } from '../firebaseFunctions'
-import { FaChevronLeft, FaChevronRight, FaReply, FaEdit } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaReply, FaEdit, FaTrash } from 'react-icons/fa'
 import Layout from '../components/Layout'
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal'
 
 interface AdminStats {
   totalPlayers: number
@@ -113,6 +115,10 @@ export default function AdminDashboard() {
 
   // Add state for editing drafts
   const [editingDraft, setEditingDraft] = useState<Changelog | null>(null)
+
+  // Add state for delete confirmation modal
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure()
+  const [feedbackToDelete, setFeedbackToDelete] = useState<Feedback | null>(null)
 
   useEffect(() => {
     const checkAuth = () => {
@@ -300,6 +306,32 @@ export default function AdminDashboard() {
     setIsSubmitting(false)
   }
 
+  const handleDeleteClick = (feedback: Feedback) => {
+    setFeedbackToDelete(feedback)
+    onDeleteOpen()
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!feedbackToDelete?.id) return;
+
+    const result = await deleteFeedback(feedbackToDelete.id);
+
+    if (result.success) {
+      // Refresh feedback data
+      const { feedback: feedbackData, total } = await getPaginatedFeedback(currentPage);
+      setFeedback(feedbackData);
+      setTotalFeedback(total);
+      onDeleteClose();
+    }
+
+    toast({
+      title: result.success ? 'Success' : 'Error',
+      description: result.message,
+      status: result.success ? 'success' : 'error',
+      duration: 3000,
+    });
+  }
+
   const totalPages = Math.ceil(totalFeedback / 5)
 
   return (
@@ -383,14 +415,22 @@ export default function AdminDashboard() {
                                   </Box>
                                 )}
                               </VStack>
-                              <IconButton
-                                aria-label="Reply to feedback"
-                                icon={<FaReply />}
-                                onClick={() => handleOpenResponse(item)}
-                                ml={4}
-                                colorScheme="blue"
-                                variant="outline"
-                              />
+                              <HStack spacing={2}>
+                                <IconButton
+                                  aria-label="Delete feedback"
+                                  icon={<FaTrash />}
+                                  onClick={() => handleDeleteClick(item)}
+                                  colorScheme="red"
+                                  variant="ghost"
+                                />
+                                <IconButton
+                                  aria-label="Reply to feedback"
+                                  icon={<FaReply />}
+                                  onClick={() => handleOpenResponse(item)}
+                                  colorScheme="blue"
+                                  variant="outline"
+                                />
+                              </HStack>
                             </Flex>
                           </Box>
                         ))
@@ -668,6 +708,17 @@ export default function AdminDashboard() {
             </ModalFooter>
           </ModalContent>
         </Modal>
+
+        {/* Add DeleteConfirmationModal */}
+        {feedbackToDelete && (
+          <DeleteConfirmationModal
+            isOpen={isDeleteOpen}
+            onClose={onDeleteClose}
+            onConfirm={handleDeleteConfirm}
+            isLoading={isSubmitting}
+            feedback={feedbackToDelete}
+          />
+        )}
       </Container>
     </Layout>
   )

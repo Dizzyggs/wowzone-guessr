@@ -16,12 +16,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getZonesByContinent, getZoneNames, type Zone } from '../data/zones'
 import { preloadImages, getZoneImagePath } from '../utils/imagePreloader'
+import { extractDominantColor } from '../utils/colorExtractor'
 import GameNotification from '../components/GameNotification'
 import ScoreCounter from '../components/ScoreCounter'
 import GameTimer from '../components/GameTimer'
 import ResultsModal from '../components/ResultsModal'
 import ReadyModal from '../components/ReadyModal'
 import ZoomWarning from '../components/ZoomWarning'
+import AmbientParticles from '../components/AmbientParticles'
 import { FaForward } from 'react-icons/fa'
 import './Game.scss'
 
@@ -142,11 +144,13 @@ const Game = () => {
     questionsAnswered: 0
   })
 
+  const [isSkipping, setIsSkipping] = useState(false)
   const [showNotification, setShowNotification] = useState(false)
   const [notificationText, setNotificationText] = useState('')
   const [notificationType, setNotificationType] = useState<'success' | 'error' | 'info'>('success')
   const [input, setInput] = useState('')
   const [suggestions, setSuggestions] = useState<string[]>([])
+  const [dominantColor, setDominantColor] = useState('#3182ce')
 
   // Get all available zones
   const availableZones = [
@@ -195,6 +199,11 @@ const Game = () => {
     // Get the image path
     const imagePath = getZoneImagePath(randomZone)
 
+    // Extract dominant color when loading new image
+    extractDominantColor(imagePath).then(color => {
+      setDominantColor(color)
+    })
+
     // Preload the next image before updating state
     const img = document.createElement('img')
     img.src = imagePath
@@ -206,7 +215,7 @@ const Game = () => {
         options,
         usedZones: new Set([...prev.usedZones, randomZone.id]),
         imageKey: prev.imageKey + 1,
-        lives: isMultipleChoice ? 1 : 2 // Reset lives for each new question
+        lives: isMultipleChoice ? 1 : 2
       }))
     }
 
@@ -320,24 +329,80 @@ const Game = () => {
     getNextZone()
   }
 
-  const handleSkip = () => {
-    if (!gameState.currentZone) return;
+  const handleSkip = async () => {
+    if (!gameState.currentZone || isSkipping) return;
     
+    setIsSkipping(true);
+    
+    // Show notification
+    showGameNotification('Question skipped', 'info');
+
+    // Update skipped zones
     setGameState(prev => ({
       ...prev,
       skippedZones: new Set([...prev.skippedZones, prev.currentZone!.name]),
       questionsAnswered: prev.questionsAnswered + 1
     }));
 
-    // Show notification
-    showGameNotification('Question skipped', 'info');
+    // Get next zone with loading state
+    const unusedZones = availableZones.filter(zone => !gameState.usedZones.has(zone.id));
 
-    // Load next question
-    getNextZone();
+    if (unusedZones.length === 0) {
+      setGameState(prev => ({ 
+        ...prev, 
+        showResults: true,
+        isAnswering: true
+      }));
+      setIsSkipping(false);
+      return;
+    }
+
+    const randomZone = unusedZones[Math.floor(Math.random() * unusedZones.length)];
+    const options = isMultipleChoice ? getRandomOptions(randomZone) : [];
+    const imagePath = getZoneImagePath(randomZone);
+
+    // Extract dominant color for the new image
+    try {
+      const newColor = await extractDominantColor(imagePath);
+      setDominantColor(newColor);
+    } catch (error) {
+      console.error('Failed to extract dominant color:', error);
+    }
+
+    // Create and load the new image
+    const img = document.createElement('img');
+    img.src = imagePath;
+    
+    img.onload = () => {
+      setGameState(prev => ({
+        ...prev,
+        currentZone: randomZone,
+        currentImage: imagePath,
+        options,
+        usedZones: new Set([...prev.usedZones, randomZone.id]),
+        imageKey: prev.imageKey + 1,
+        lives: isMultipleChoice ? 1 : 2
+      }));
+      setTimeout(() => {
+        setIsSkipping(false);
+      }, 1500);
+    };
+
+    img.onerror = () => {
+      console.error('Failed to load next image');
+      setIsSkipping(false);
+    };
+
+    // Preload next batch of images in background
+    const remainingZones = unusedZones.filter(zone => zone.id !== randomZone.id);
+    preloadImages(remainingZones);
   };
 
   return (
     <Container maxW="container.xl" py={4} position="relative" px={{ base: 2, md: 4 }}>
+      {/* Add AmbientParticles before other content */}
+      <AmbientParticles color={dominantColor} />
+      
       <VStack spacing={4} align="stretch">
         {/* Score and Lives */}
         <Flex justify="space-between" align="center" fontSize={{ base: "sm", md: "md" }}>
@@ -432,8 +497,16 @@ const Game = () => {
                 onClick={handleSkip}
                 size="sm"
                 sx={glassButtonStyle}
+                isDisabled={isSkipping}
+                _disabled={{
+                  opacity: 0.6,
+                  cursor: 'not-allowed',
+                  _hover: {
+                    transform: 'none',
+                  }
+                }}
               >
-                Skip
+                {isSkipping ? 'Skipping...' : 'Skip'}
               </Button>
             </Box>
 

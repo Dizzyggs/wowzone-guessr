@@ -113,13 +113,14 @@ const getMedalColor = (index: number): string => {
 
 const LeaderboardCard = motion(React.forwardRef<HTMLDivElement, { entry: LeaderboardEntry, index: number, isEvenRow: boolean }>(({ entry, index }, ref) => {
   const isMobile = useBreakpointValue({ base: true, md: false })
-  const isTopThree = index <= 2
+  const actualIndex = entry.originalIndex ?? index
+  const isTopThree = actualIndex <= 2
   return (
     <MotionBox
       ref={ref}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
+      transition={{ duration: 0.2 }}
       whileHover={{ 
         scale: 1.02,
         transition: { duration: 0.2 }
@@ -139,7 +140,7 @@ const LeaderboardCard = motion(React.forwardRef<HTMLDivElement, { entry: Leaderb
         left: 0,
         right: 0,
         bottom: 0,
-        background: isTopThree ? getMedalColor(index) : 'transparent',
+        background: isTopThree ? getMedalColor(actualIndex) : 'transparent',
         opacity: 0.1,
         borderRadius: 'xl',
       }}
@@ -151,12 +152,12 @@ const LeaderboardCard = motion(React.forwardRef<HTMLDivElement, { entry: Leaderb
       >
         {/* Rank */}
         <Center>
-          {index <= 2 ? (
+          {actualIndex <= 2 ? (
             <Icon 
               as={FaMedal} 
               w={{ base: 6, md: 8 }} 
               h={{ base: 6, md: 8 }} 
-              color={getMedalColor(index)} 
+              color={getMedalColor(actualIndex)} 
               filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"
             />
           ) : (
@@ -165,7 +166,7 @@ const LeaderboardCard = motion(React.forwardRef<HTMLDivElement, { entry: Leaderb
               fontWeight="bold" 
               color="whiteAlpha.700"
             >
-              #{index + 1}
+              #{actualIndex + 1}
             </Text>
           )}
         </Center>
@@ -232,6 +233,7 @@ const Leaderboard = () => {
   const [selectedMode, setSelectedMode] = useState<'easy' | 'hard'>('easy')
   const [allScores, setAllScores] = useState<LeaderboardEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isSearching, setIsSearching] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
   const isMobile = useBreakpointValue({ base: true, md: false })
@@ -254,12 +256,22 @@ const Leaderboard = () => {
     loadScores()
   }, [selectedMode])
 
-  // Filter scores based on search query
+  // Filter scores based on search query with debounce
   const filteredScores = useMemo(() => {
+    setIsSearching(true)
     const query = searchQuery.toLowerCase().trim()
+    
+    // Small delay to show loading state
+    setTimeout(() => {
+      setIsSearching(false)
+    }, 300)
+
     if (!query) return allScores
 
-    return allScores.filter(score => 
+    return allScores.map((score, index) => ({
+      ...score,
+      originalIndex: index
+    })).filter(score => 
       score.playerName.toLowerCase().includes(query)
     )
   }, [searchQuery, allScores])
@@ -287,10 +299,22 @@ const Leaderboard = () => {
   }
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
+    setIsSearching(true)
+    const value = e.target.value
+    setSearchQuery(value)
+    
+    // Clear any existing timeout
+    if ((window as any).searchTimeout) {
+      clearTimeout((window as any).searchTimeout)
+    }
+    
+    // Set new timeout
+    (window as any).searchTimeout = setTimeout(() => {
+      setIsSearching(false)
+    }, 300)
   }
 
-  const showNoResults = !isLoading && currentScores.length === 0
+  const showNoResults = !isLoading && !isSearching && currentScores.length === 0
 
   return (
     <Container maxW="container.xl" py={{ base: 4, md: 16 }} px={{ base: 2, md: 4 }}>
@@ -409,15 +433,20 @@ const Leaderboard = () => {
             pointerEvents: 'none',
           }}
         >
-          {isLoading ? (
+          {isLoading || isSearching ? (
             <Center py={16}>
-              <Spinner 
-                size="xl" 
-                color="blue.400" 
-                thickness="4px"
-                speed="0.8s"
-                emptyColor="whiteAlpha.100"
-              />
+              <VStack spacing={4}>
+                <Spinner 
+                  size="xl" 
+                  color="blue.400" 
+                  thickness="4px"
+                  speed="0.8s"
+                  emptyColor="whiteAlpha.100"
+                />
+                <Text color="whiteAlpha.600">
+                  {isSearching ? "Searching..." : "Loading scores..."}
+                </Text>
+              </VStack>
             </Center>
           ) : showNoResults ? (
             <Center py={16}>

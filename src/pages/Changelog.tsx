@@ -144,7 +144,7 @@ const Changelog = () => {
             mx="auto"
             lineHeight="tall"
           >
-            Track the evolution of WoW ZoneGuessr with our latest updates and improvements
+            Track the changes of WoW ZoneGuessr with our latest updates and improvements
           </Text>
         </MotionBox>
 

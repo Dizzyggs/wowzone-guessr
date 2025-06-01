@@ -63,7 +63,7 @@ export const HowToPlayGuide = ({ isOpen, onClose }: HowToPlayGuideProps) => {
                     </Text>
                     <Text fontSize="sm" mt={2} color="gray.400">
                       • 2 lives
-                      • 200 points per correct answer
+                      • 150 points per correct answer
                     </Text>
                   </Box>
                 </Flex>
@@ -100,7 +100,7 @@ export const HowToPlayGuide = ({ isOpen, onClose }: HowToPlayGuideProps) => {
                     <Box as={FaTrophy} color="yellow.500" boxSize={5} mr={3} />
                     <Box>
                       <Text fontWeight="bold">Scoring System</Text>
-                      <Text fontSize="sm">• ✍️<strong style={{textDecoration: 'underline'}}>Input Mode:</strong> 200 points per correct answer</Text>
+                      <Text fontSize="sm">• ✍️<strong style={{textDecoration: 'underline'}}>Input Mode:</strong> 150 points per correct answer</Text>
                       <Text fontSize="sm">• ❓<strong style={{textDecoration: 'underline'}}>Multiple Choice Mode:</strong> 100 points per correct answer</Text>
                       <Text fontSize="sm">• Time bonus based on completion speed</Text>
                       <Text fontSize="sm">• Compete for high scores on the leaderboard!</Text>
