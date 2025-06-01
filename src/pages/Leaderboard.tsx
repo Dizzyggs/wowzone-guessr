@@ -111,10 +111,9 @@ const getMedalColor = (index: number): string => {
   }
 }
 
-const LeaderboardCard = motion(React.forwardRef<HTMLDivElement, { entry: LeaderboardEntry, index: number, isEvenRow: boolean }>(({ entry, index, isEvenRow }, ref) => {
+const LeaderboardCard = motion(React.forwardRef<HTMLDivElement, { entry: LeaderboardEntry, index: number, isEvenRow: boolean }>(({ entry, index }, ref) => {
   const isMobile = useBreakpointValue({ base: true, md: false })
   const isTopThree = index <= 2
-
   return (
     <MotionBox
       ref={ref}
