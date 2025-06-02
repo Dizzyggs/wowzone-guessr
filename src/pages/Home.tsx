@@ -170,7 +170,7 @@ const Home = () => {
               transition={{ duration: 0.5, delay: 1.1 }}
               w={{ base: "full", md: "auto" }}
             >
-              <HStack spacing={4} justify={{ base: "stretch", md: "flex-start" }} w="full" border="1px solid red">
+              <HStack spacing={4} justify={{ base: "stretch", md: "flex-start" }} w="full">
                 <Button
                   size={{ base: "md", md: "lg" }}
                   px={{ base: 6, md: 8 }}
