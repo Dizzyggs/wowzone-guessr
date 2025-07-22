@@ -39,14 +39,26 @@ const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
   const [showProfanityError, setShowProfanityError] = useState(false)
   const toast = useToast()
 
+  // Add debounced hover state to prevent glitching
+  const [debouncedHoveredRating, setDebouncedHoveredRating] = useState(0)
+
   useEffect(() => {
     if (!isOpen) {
       setMessage('')
       setRating(0)
       setHoveredRating(0)
+      setDebouncedHoveredRating(0)
       setShowProfanityError(false)
     }
   }, [isOpen])
+
+  // Debounce hover state changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedHoveredRating(hoveredRating)
+    }, 50)
+    return () => clearTimeout(timer)
+  }, [hoveredRating])
 
   const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newMessage = e.target.value
@@ -109,9 +121,9 @@ const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
     switch (rating) {
       case 1: return 'Poor'
       case 2: return 'Fair'
-      case 3: return 'Good'
-      case 4: return 'Great'
-      case 5: return 'Excellent'
+      case 3: return 'Great'
+      case 4: return 'Excellent'
+      case 5: return 'Outstanding'
       default: return 'Select your rating'
     }
   }
@@ -197,8 +209,9 @@ const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
                   left="-50%"
                   width="200%"
                   height="200%"
-                  background={`radial-gradient(circle, ${getRatingColor(hoveredRating || rating)}20 0%, transparent 70%)`}
-                  transition="all 0.3s"
+                  background={`radial-gradient(circle, ${getRatingColor(debouncedHoveredRating || rating)}20 0%, transparent 70%)`}
+                  transition="background 0.3s ease-out"
+                  pointerEvents="none"
                 />
                 <VStack spacing={4}>
                   <HStack spacing={4} justify="center">
@@ -211,12 +224,14 @@ const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
                         onClick={() => setRating(star)}
                         onMouseEnter={() => setHoveredRating(star)}
                         onMouseLeave={() => setHoveredRating(0)}
+                        position="relative"
+                        zIndex={1}
                       >
                         <MotionIcon
                           as={FaStar}
                           w={8}
                           h={8}
-                          color={(hoveredRating || rating) >= star ? getRatingColor(hoveredRating || rating) : "whiteAlpha.200"}
+                          color={(debouncedHoveredRating || rating) >= star ? getRatingColor(debouncedHoveredRating || rating) : "whiteAlpha.200"}
                           transition={{ duration: 0.2 }}
                         />
                       </MotionBox>
@@ -224,7 +239,7 @@ const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
                   </HStack>
                   <AnimatePresence mode="wait">
                     <MotionBox
-                      key={hoveredRating || rating}
+                      key={debouncedHoveredRating || rating}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
@@ -233,9 +248,9 @@ const FeedbackModal = ({ isOpen, onClose }: FeedbackModalProps) => {
                       <Text 
                         fontSize="lg" 
                         fontWeight="bold"
-                        color={getRatingColor(hoveredRating || rating)}
+                        color={getRatingColor(debouncedHoveredRating || rating)}
                       >
-                        {getRatingLabel(hoveredRating || rating)}
+                        {getRatingLabel(debouncedHoveredRating || rating)}
                       </Text>
                     </MotionBox>
                   </AnimatePresence>
